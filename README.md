@@ -70,6 +70,14 @@ grepcmd = "grep -n"               # grep command executable
 assetsdir = "/path/to/assets"     # assets directory for serve command
 ```
 
+editor, selectcmd, grepcmd can be used placeholder below.
+
+|placeholder|replace to     |
+|-----------|---------------|
+|${FILES}   |target files   |
+|${DIR}     |same as memodir|
+|${PATTERN} |grep pattern   |
+
 ## License
 
 MIT
