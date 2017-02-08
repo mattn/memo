@@ -162,6 +162,7 @@ func (cfg *config) load() error {
 		_, err := toml.DecodeFile(file, cfg)
 		return err
 	}
+
 	if !os.IsNotExist(err) {
 		return err
 	}
@@ -173,7 +174,10 @@ func (cfg *config) load() error {
 	dir = filepath.Join(dir, "_posts")
 	os.MkdirAll(dir, 0700)
 	cfg.MemoDir = filepath.ToSlash(dir)
-	cfg.Editor = "vim"
+	cfg.Editor = os.Getenv("EDITOR")
+	if cfg.Editor == "" {
+		cfg.Editor = "vim"
+	}
 	cfg.Column = 20
 	cfg.SelectCmd = "peco"
 	cfg.GrepCmd = "grep -n"
