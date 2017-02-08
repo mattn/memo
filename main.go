@@ -15,7 +15,6 @@ import (
 	"runtime"
 	"sort"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -272,7 +271,7 @@ func escape(name string) string {
 func runcmd(command string, files ...string) error {
 	var args []string
 	for _, file := range files {
-		args = append(args, syscall.EscapeArg(file))
+		args = append(args, shellquote(file))
 	}
 	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {
