@@ -127,15 +127,15 @@ var commands = []cli.Command{
 }
 
 func (cfg *config) load() error {
-	dir := os.Getenv("HOME")
-	if dir == "" && runtime.GOOS == "windows" {
+	var dir string
+	if runtime.GOOS == "windows" {
 		dir = os.Getenv("APPDATA")
 		if dir == "" {
 			dir = filepath.Join(os.Getenv("USERPROFILE"), "Application Data", "memo")
 		}
 		dir = filepath.Join(dir, "memo")
 	} else {
-		dir = filepath.Join(dir, ".config", "memo")
+		dir = filepath.Join(os.Getenv("HOME"), ".config", "memo")
 	}
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		return err
