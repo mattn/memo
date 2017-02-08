@@ -165,7 +165,7 @@ func (cfg *config) load() error {
 	}
 	cfg.Column = 20
 	cfg.SelectCmd = "peco"
-	cfg.GrepCmd = "grep -n"
+	cfg.GrepCmd = "grep -nH"
 	cfg.AssetsDir = "."
 	return toml.NewEncoder(f).Encode(cfg)
 }
