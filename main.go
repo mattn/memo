@@ -22,7 +22,6 @@ import (
 	"github.com/mattn/go-isatty"
 	"github.com/mattn/go-runewidth"
 	"github.com/pkg/browser"
-	"github.com/russross/blackfriday"
 	"github.com/shurcooL/github_flavored_markdown"
 	"github.com/shurcooL/github_flavored_markdown/gfmstyle"
 	"github.com/urfave/cli"
@@ -41,13 +40,8 @@ const templateDirContent = `
 li {list-style-type: none;}
 </style>
 <body>
-<ul>
-{{range .}}
-  <li>
-    <a href="/{{.Name}}">{{.Name}}</a>
-    <dd>{{.Body}}</dd>
-  </li>
-{{end}}
+<ul>{{range .}}
+  <li><a href="/{{.Name}}">{{.Name}}</a><dd>{{.Body}}</dd></li>{{end}}
 </ul>
 </body>
 </html>
@@ -62,18 +56,9 @@ const templateBodyContent = `
   <link href="/assets/gfm/gfm.css" media="all" rel="stylesheet" type="text/css" />
 </head>
 <body>
-{{.Body}}
-</body>
+{{.Body}}</body>
 </html>
 `
-
-const markdownExtensions = blackfriday.EXTENSION_NO_INTRA_EMPHASIS |
-	blackfriday.EXTENSION_TABLES |
-	blackfriday.EXTENSION_FENCED_CODE |
-	blackfriday.EXTENSION_AUTOLINK |
-	blackfriday.EXTENSION_STRIKETHROUGH |
-	blackfriday.EXTENSION_HARD_LINE_BREAK |
-	blackfriday.EXTENSION_SPACE_HEADERS
 
 type config struct {
 	MemoDir   string `toml:"memodir"`
