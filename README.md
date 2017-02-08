@@ -66,7 +66,7 @@ memodir = "/path/to/you/memo/dir" # specify memo directory
 editor = "vim"                    # your favorite text editor
 column = 30                       # column size for list command
 selectcmd = "peco"                # selector command for edit command
-grepcmd = "grep -n"               # grep command executable
+grepcmd = "grep -nH"              # grep command executable
 assetsdir = "/path/to/assets"     # assets directory for serve command
 ```
 
