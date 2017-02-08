@@ -267,16 +267,35 @@ func escape(name string) string {
 	return strings.Trim(strings.Replace(s, "--", "-", -1), "- ")
 }
 
-func runcmd(command string, files ...string) error {
+func (cfg *config) runcmd(command, pattern string, files ...string) error {
 	var args []string
 	for _, file := range files {
 		args = append(args, shellquote(file))
 	}
+	cmdargs := strings.Join(args, " ")
+
+	hasEnv := false
+	command = os.Expand(command, func(s string) string {
+		hasEnv = true
+		switch s {
+		case "FILES":
+			return cmdargs
+		case "PATTERN":
+			return pattern
+		case "DIR":
+			return cfg.MemoDir
+		}
+		return ""
+	})
+	if !hasEnv {
+		command += " " + cmdargs
+	}
+
 	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {
-		cmd = exec.Command("cmd", "/c", fmt.Sprintf("%s %s", command, strings.Join(args, " ")))
+		cmd = exec.Command("cmd", "/c", command)
 	} else {
-		cmd = exec.Command("sh", "-c", fmt.Sprintf("%s %s", command, strings.Join(args, " ")))
+		cmd = exec.Command("sh", "-c", command)
 	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -303,7 +322,7 @@ func cmdNew(c *cli.Context) error {
 	}
 	file = time.Now().Format("2006-01-02-") + escape(file) + ".md"
 	file = filepath.Join(cfg.MemoDir, file)
-	return runcmd(cfg.Editor, file)
+	return cfg.runcmd(cfg.Editor, "", file)
 }
 
 func cmdEdit(c *cli.Context) error {
@@ -334,7 +353,7 @@ func cmdEdit(c *cli.Context) error {
 			files[i] = filepath.Join(cfg.MemoDir, file)
 		}
 	}
-	return runcmd(cfg.Editor, files...)
+	return cfg.runcmd(cfg.Editor, "", files...)
 }
 
 func cmdGrep(c *cli.Context) error {
@@ -354,11 +373,10 @@ func cmdGrep(c *cli.Context) error {
 	}
 	files = filterMarkdown(files)
 	var args []string
-	args = append(args, c.Args().First())
 	for _, file := range files {
 		args = append(args, filepath.Join(cfg.MemoDir, file))
 	}
-	return runcmd(cfg.GrepCmd, args...)
+	return cfg.runcmd(cfg.GrepCmd, c.Args().First(), args...)
 }
 
 func cmdConfig(c *cli.Context) error {
@@ -375,7 +393,7 @@ func cmdConfig(c *cli.Context) error {
 		dir = filepath.Join(dir, ".config", "memo")
 	}
 	file := filepath.Join(dir, "config.toml")
-	return runcmd(cfg.Editor, file)
+	return cfg.runcmd(cfg.Editor, "", file)
 }
 
 func cmdServe(c *cli.Context) error {
