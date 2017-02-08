@@ -78,6 +78,32 @@ editor, selectcmd, grepcmd can be used placeholder below.
 |${DIR}     |same as memodir|
 |${PATTERN} |grep pattern   |
 
+## FAQ
+
+### Want to use [ag](https://github.com/ggreer/the_silver_searcher) for grepcmd
+
+```
+grepcmd = "ag ${PATTERN} ${DIR}"
+```
+
+### Want to use [jvgrep](https://github.com/mattn/jvgrep) for grepcmd
+
+```
+grepcmd = "jvgrep ${PATTERN} ${DIR}"
+```
+
+### Want to use [gof](https://github.com/mattn/gof) for selectcmd
+
+```
+selectcmd = "gof"
+```
+
+### Want to use [fzf](https://github.com/junegunn/fzf) for selectcmd
+
+```
+selectcmd = "fzf"
+```
+
 ## License
 
 MIT
