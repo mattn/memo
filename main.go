@@ -15,6 +15,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -170,7 +171,7 @@ func (cfg *config) load() error {
 	cfg.Editor = "vim"
 	cfg.Column = 20
 	cfg.SelectCmd = "peco"
-	cfg.GrepCmd = "grep"
+	cfg.GrepCmd = "grep -n"
 	cfg.AssetsDir = "."
 	return toml.NewEncoder(f).Encode(cfg)
 }
@@ -268,11 +269,20 @@ func escape(name string) string {
 	return strings.Trim(strings.Replace(s, "--", "-", -1), "- ")
 }
 
-func edit(editor string, files ...string) error {
-	cmd := exec.Command(editor, files...)
-	cmd.Stdin = os.Stdin
+func runcmd(command string, files ...string) error {
+	var args []string
+	for _, file := range files {
+		args = append(args, syscall.EscapeArg(file))
+	}
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd", "/c", fmt.Sprintf("%s %s", command, strings.Join(args, " ")))
+	} else {
+		cmd = exec.Command("sh", "-c", fmt.Sprintf("%s %s", command, strings.Join(args, " ")))
+	}
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.Stdin = os.Stdin
 	return cmd.Run()
 }
 
@@ -295,7 +305,7 @@ func cmdNew(c *cli.Context) error {
 	}
 	file = time.Now().Format("2006-01-02-") + escape(file) + ".md"
 	file = filepath.Join(cfg.MemoDir, file)
-	return edit(cfg.Editor, file)
+	return runcmd(cfg.Editor, file)
 }
 
 func cmdEdit(c *cli.Context) error {
@@ -326,7 +336,7 @@ func cmdEdit(c *cli.Context) error {
 			files[i] = filepath.Join(cfg.MemoDir, file)
 		}
 	}
-	return edit(cfg.Editor, files...)
+	return runcmd(cfg.Editor, files...)
 }
 
 func cmdGrep(c *cli.Context) error {
@@ -350,10 +360,7 @@ func cmdGrep(c *cli.Context) error {
 	for _, file := range files {
 		args = append(args, filepath.Join(cfg.MemoDir, file))
 	}
-	cmd := exec.Command(cfg.GrepCmd, args...)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-	return cmd.Run()
+	return runcmd(cfg.GrepCmd, args...)
 }
 
 func cmdConfig(c *cli.Context) error {
@@ -370,7 +377,7 @@ func cmdConfig(c *cli.Context) error {
 		dir = filepath.Join(dir, ".config", "memo")
 	}
 	file := filepath.Join(dir, "config.toml")
-	return edit(cfg.Editor, file)
+	return runcmd(cfg.Editor, file)
 }
 
 func cmdServe(c *cli.Context) error {
