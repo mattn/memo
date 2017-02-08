@@ -190,6 +190,10 @@ func run() int {
 	if err != nil {
 		return msg(err)
 	}
+	dir := os.Getenv("MEMODIR")
+	if dir != "" {
+		cfg.MemoDir = dir
+	}
 
 	app := cli.NewApp()
 	app.Name = "memo"
@@ -201,19 +205,18 @@ func run() int {
 }
 
 func firstline(name string) string {
-	f, err := os.Open(name)
+	b, err := ioutil.ReadFile(name)
 	if err != nil {
 		return ""
 	}
-	defer f.Close()
-	scanner := bufio.NewScanner(f)
-	if !scanner.Scan() {
-		return ""
+	body := string(b)
+	if strings.HasPrefix(body, "---\n") {
+		if pos := strings.Index(body[4:], "---\n"); pos > 0 {
+			body = body[4+pos+4:]
+		}
 	}
-	if scanner.Err() != nil {
-		return ""
-	}
-	return strings.TrimLeft(scanner.Text(), "# ")
+	body = strings.SplitN(strings.TrimSpace(body), "\n", 2)[0]
+	return strings.TrimLeft(body, "# ")
 }
 
 func cmdList(c *cli.Context) error {
@@ -239,7 +242,7 @@ func cmdList(c *cli.Context) error {
 			continue
 		}
 		if istty {
-			title := runewidth.Truncate(firstline(filepath.Join(cfg.MemoDir, file)), 80-col, "...")
+			title := runewidth.Truncate(firstline(filepath.Join(cfg.MemoDir, file)), 80-4-col, "...")
 			file = runewidth.FillRight(runewidth.Truncate(file, col, "..."), col)
 			fmt.Fprintf(color.Output, "%s : %s\n", color.GreenString(file), color.YellowString(title))
 		} else {
@@ -396,8 +399,6 @@ func cmdServe(c *cli.Context) error {
 					body = body[4+pos+4:]
 				}
 			}
-			//renderer := blackfriday.HtmlRenderer(0, "", "")
-			//body = string(blackfriday.Markdown([]byte(body), renderer, markdownExtensions))
 			body = string(github_flavored_markdown.Markdown([]byte(body)))
 			t := template.Must(template.New("body").Parse(templateBodyContent))
 			t.Execute(w, struct {
