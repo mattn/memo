@@ -28,7 +28,9 @@ import (
 )
 
 const (
-	column  = 30
+	column = 30
+
+	// VERSION is a version of this app
 	VERSION = "0.0.2"
 )
 
