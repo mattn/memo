@@ -28,7 +28,7 @@ import (
 	"github.com/urfave/cli"
 )
 
-const column = 20
+const column = 30
 
 const templateDirContent = `
 <!DOCTYPE html>
@@ -173,6 +173,17 @@ func msg(err error) int {
 	return 0
 }
 
+func filterMarkdown(files []string) []string {
+	var newfiles []string
+	for _, file := range files {
+		if strings.HasSuffix(file, ".md") {
+			newfiles = append(newfiles, file)
+		}
+	}
+	sort.Strings(newfiles)
+	return newfiles
+}
+
 func run() int {
 	var cfg config
 	err := cfg.load()
@@ -216,13 +227,17 @@ func cmdList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	sort.Strings(files)
+	files = filterMarkdown(files)
 	istty := isatty.IsTerminal(os.Stdout.Fd())
 	col := cfg.Column
 	if col == 0 {
 		col = column
 	}
+	pat := c.Args().First()
 	for _, file := range files {
+		if pat != "" && !strings.Contains(file, pat) {
+			continue
+		}
 		if istty {
 			title := runewidth.Truncate(firstline(filepath.Join(cfg.MemoDir, file)), 80-col, "...")
 			file = runewidth.FillRight(runewidth.Truncate(file, col, "..."), col)
@@ -286,7 +301,7 @@ func cmdEdit(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
-		sort.Strings(files)
+		files = filterMarkdown(files)
 		cmd := exec.Command(cfg.SelectCmd)
 		cmd.Stdin = strings.NewReader(strings.Join(files, "\n"))
 		b, err := cmd.CombinedOutput()
@@ -316,7 +331,7 @@ func cmdGrep(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	sort.Strings(files)
+	files = filterMarkdown(files)
 	var args []string
 	args = append(args, c.Args().First())
 	for _, file := range files {
@@ -361,7 +376,7 @@ func cmdServe(c *cli.Context) error {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			sort.Strings(files)
+			files = filterMarkdown(files)
 			w.Header().Set("content-type", "text/html")
 			t := template.Must(template.New("dir").Parse(templateDirContent))
 			err = t.Execute(w, files)
