@@ -34,6 +34,27 @@ GLOBAL OPTIONS:
 $ go get github.com/mattn/memo
 ```
 
+Let's start create memo file.
+
+```
+$ memo new
+Title:
+```
+
+Input title for the memo, then you see the text editor launched. After saving markdown, list entries with `memo list`.
+
+```
+$ memo list
+2017-02-07-memo-command.md   : Installed memo command
+```
+
+And grep
+
+```
+$ memo grep command
+2017-02-07-memo-command.md:1:# Installed memo command
+```
+
 ## Configuration
 
 run `memo config`.
@@ -43,7 +64,7 @@ memodir = "/path/to/you/memo/dir" # specify memo directory
 editor = "vim"                    # your favorite text editor
 column = 30                       # column size for list command
 selectcmd = "peco"                # selector command for edit command
-grepcmd = "grep"                  # grep command executable
+grepcmd = "grep -n"               # grep command executable
 assetsdir = "/path/to/assets"     # assets directory for serve command
 ```
 
