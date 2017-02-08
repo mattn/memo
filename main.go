@@ -27,7 +27,10 @@ import (
 	"github.com/urfave/cli"
 )
 
-const column = 30
+const (
+	column  = 30
+	VERSION = "0.0.2"
+)
 
 const templateDirContent = `
 <!DOCTYPE html>
@@ -203,7 +206,7 @@ func run() int {
 	app := cli.NewApp()
 	app.Name = "memo"
 	app.Usage = "Memo Life For You"
-	app.Version = "0.0.1"
+	app.Version = VERSION
 	app.Commands = commands
 	app.Metadata = map[string]interface{}{"config": &cfg}
 	return msg(app.Run(os.Args))
