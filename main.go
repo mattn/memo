@@ -43,7 +43,10 @@ li {list-style-type: none;}
 <body>
 <ul>
 {{range .}}
-  <li><a href="/{{.}}">{{.}}</a></li>
+  <li>
+    <a href="/{{.Name}}">{{.Name}}</a>
+    <dd>{{.Body}}</dd>
+  </li>
 {{end}}
 </ul>
 </body>
@@ -77,7 +80,13 @@ type config struct {
 	Editor    string `toml:"editor"`
 	Column    int    `toml:"column"`
 	SelectCmd string `toml:"selectcmd"`
-	GrepCmd   string `toml:"GrepCmd"`
+	GrepCmd   string `toml:"grepcmd"`
+	AssetsDir string `toml:"assetsdir"`
+}
+
+type entry struct {
+	Name string
+	Body template.HTML
 }
 
 var commands = []cli.Command{
@@ -162,6 +171,7 @@ func (cfg *config) load() error {
 	cfg.Column = 20
 	cfg.SelectCmd = "peco"
 	cfg.GrepCmd = "grep"
+	cfg.AssetsDir = "."
 	return toml.NewEncoder(f).Encode(cfg)
 }
 
@@ -380,9 +390,16 @@ func cmdServe(c *cli.Context) error {
 				return
 			}
 			files = filterMarkdown(files)
+			var entries []entry
+			for _, file := range files {
+				entries = append(entries, entry{
+					Name: file,
+					Body: template.HTML(runewidth.Truncate(firstline(filepath.Join(cfg.MemoDir, file)), 80, "...")),
+				})
+			}
 			w.Header().Set("content-type", "text/html")
 			t := template.Must(template.New("dir").Parse(templateDirContent))
-			err = t.Execute(w, files)
+			err = t.Execute(w, entries)
 			if err != nil {
 				log.Println(err)
 			}
@@ -401,16 +418,14 @@ func cmdServe(c *cli.Context) error {
 			}
 			body = string(github_flavored_markdown.Markdown([]byte(body)))
 			t := template.Must(template.New("body").Parse(templateBodyContent))
-			t.Execute(w, struct {
-				Name string
-				Body template.HTML
-			}{
+			t.Execute(w, entry{
 				Name: req.URL.Path,
 				Body: template.HTML(body),
 			})
 		}
 	})
 	http.Handle("/assets/gfm/", http.StripPrefix("/assets/gfm", http.FileServer(gfmstyle.Assets)))
+	http.Handle("/assets/", http.StripPrefix("/assets", http.FileServer(http.Dir(cfg.AssetsDir))))
 
 	addr := c.String("addr")
 	var url string
