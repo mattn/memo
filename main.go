@@ -101,6 +101,12 @@ var commands = []cli.Command{
 		Aliases: []string{"l"},
 		Usage:   "list memo",
 		Action:  cmdList,
+		Flags: []cli.Flag{
+			cli.BoolFlag{
+				Name:  "fullpath",
+				Usage: "show file path",
+			},
+		},
 	},
 	{
 		Name:    "edit",
@@ -247,15 +253,19 @@ func cmdList(c *cli.Context) error {
 		col = column
 	}
 	pat := c.Args().First()
+	fullpath := c.Bool("fullpath")
 	for _, file := range files {
 		if pat != "" && !strings.Contains(file, pat) {
 			continue
 		}
-		if istty {
+		if istty && !fullpath {
 			title := runewidth.Truncate(firstline(filepath.Join(cfg.MemoDir, file)), 80-4-col, "...")
 			file = runewidth.FillRight(runewidth.Truncate(file, col, "..."), col)
 			fmt.Fprintf(color.Output, "%s : %s\n", color.GreenString(file), color.YellowString(title))
 		} else {
+			if fullpath {
+				file = filepath.Join(cfg.MemoDir, file)
+			}
 			fmt.Println(file)
 		}
 	}
