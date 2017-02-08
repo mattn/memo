@@ -4,11 +4,16 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"html/template"
+	"io/ioutil"
+	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"sort"
 	"strings"
 	"time"
 
@@ -16,10 +21,44 @@ import (
 	"github.com/fatih/color"
 	"github.com/mattn/go-isatty"
 	"github.com/mattn/go-runewidth"
+	"github.com/russross/blackfriday"
 	"github.com/urfave/cli"
 )
 
 const column = 20
+
+const templateDirContent = `
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Memo Life For You</title>
+</head>
+<style>
+li {list-style-type: none;}
+</style>
+<body>
+<ul>
+{{range .}}
+  <li><a href="/{{.}}">{{.}}</a></li>
+{{end}}
+</ul>
+</body>
+</html>
+`
+
+const templateBodyContent = `
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>{{.Name}}</title>
+</head>
+<body>
+{{.Body}}
+</body>
+</html>
+`
 
 type config struct {
 	MemoDir   string `toml:"memodir"`
@@ -29,7 +68,53 @@ type config struct {
 	GrepCmd   string `toml:"GrepCmd"`
 }
 
-func loadConfig(cfg *config) error {
+var commands = []cli.Command{
+	{
+		Name:    "new",
+		Aliases: []string{"n"},
+		Usage:   "create memo",
+		Action:  cmdNew,
+	},
+	{
+		Name:    "list",
+		Aliases: []string{"l"},
+		Usage:   "list memo",
+		Action:  cmdList,
+	},
+	{
+		Name:    "edit",
+		Aliases: []string{"e"},
+		Usage:   "edit memo",
+		Action:  cmdEdit,
+	},
+	{
+		Name:    "grep",
+		Aliases: []string{"g"},
+		Usage:   "grep memo",
+		Action:  cmdGrep,
+	},
+	{
+		Name:    "config",
+		Aliases: []string{"c"},
+		Usage:   "configure",
+		Action:  cmdConfig,
+	},
+	{
+		Name:    "serve",
+		Aliases: []string{"s"},
+		Usage:   "start http server",
+		Action:  cmdServe,
+		Flags: []cli.Flag{
+			cli.StringFlag{
+				Name:  "addr",
+				Value: ":8080",
+				Usage: "server address",
+			},
+		},
+	},
+}
+
+func (cfg *config) load() error {
 	dir := os.Getenv("HOME")
 	if dir == "" && runtime.GOOS == "windows" {
 		dir = os.Getenv("APPDATA")
@@ -78,7 +163,7 @@ func msg(err error) int {
 
 func run() int {
 	var cfg config
-	err := loadConfig(&cfg)
+	err := cfg.load()
 	if err != nil {
 		return msg(err)
 	}
@@ -87,41 +172,8 @@ func run() int {
 	app.Name = "memo"
 	app.Usage = "Memo Life For You"
 	app.Version = "0.0.1"
-	app.Commands = []cli.Command{
-		{
-			Name:    "new",
-			Aliases: []string{"n"},
-			Usage:   "create memo",
-			Action:  cmdNew,
-		},
-		{
-			Name:    "list",
-			Aliases: []string{"l"},
-			Usage:   "list memo",
-			Action:  cmdList,
-		},
-		{
-			Name:    "edit",
-			Aliases: []string{"e"},
-			Usage:   "edit memo",
-			Action:  cmdEdit,
-		},
-		{
-			Name:    "grep",
-			Aliases: []string{"g"},
-			Usage:   "grep memo",
-			Action:  cmdGrep,
-		},
-		{
-			Name:    "config",
-			Aliases: []string{"c"},
-			Usage:   "configure",
-			Action:  cmdConfig,
-		},
-	}
-	app.Metadata = map[string]interface{}{
-		"config": &cfg,
-	}
+	app.Commands = commands
+	app.Metadata = map[string]interface{}{"config": &cfg}
 	return msg(app.Run(os.Args))
 }
 
@@ -152,6 +204,7 @@ func cmdList(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	sort.Strings(files)
 	istty := isatty.IsTerminal(os.Stdout.Fd())
 	col := cfg.Column
 	if col == 0 {
@@ -221,6 +274,7 @@ func cmdEdit(c *cli.Context) error {
 		if err != nil {
 			return err
 		}
+		sort.Strings(files)
 		cmd := exec.Command(cfg.SelectCmd)
 		cmd.Stdin = strings.NewReader(strings.Join(files, "\n"))
 		b, err := cmd.CombinedOutput()
@@ -250,6 +304,7 @@ func cmdGrep(c *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	sort.Strings(files)
 	var args []string
 	args = append(args, c.Args().First())
 	for _, file := range files {
@@ -257,6 +312,7 @@ func cmdGrep(c *cli.Context) error {
 	}
 	cmd := exec.Command(cfg.GrepCmd, args...)
 	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
 	return cmd.Run()
 }
 
@@ -275,6 +331,49 @@ func cmdConfig(c *cli.Context) error {
 	}
 	file := filepath.Join(dir, "config.toml")
 	return edit(cfg.Editor, file)
+}
+
+func cmdServe(c *cli.Context) error {
+	cfg := c.App.Metadata["config"].(*config)
+
+	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
+		if req.URL.Path == "/" {
+			f, err := os.Open(cfg.MemoDir)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			defer f.Close()
+			files, err := f.Readdirnames(-1)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			sort.Strings(files)
+			w.Header().Set("content-type", "text/html")
+			t := template.Must(template.New("dir").Parse(templateDirContent))
+			err = t.Execute(w, files)
+			if err != nil {
+				log.Println(err)
+			}
+		} else {
+			p := filepath.Join(cfg.MemoDir, escape(req.URL.Path))
+			b, err := ioutil.ReadFile(p)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			t := template.Must(template.New("body").Parse(templateBodyContent))
+			t.Execute(w, struct {
+				Name string
+				Body template.HTML
+			}{
+				Name: req.URL.Path,
+				Body: template.HTML(string(blackfriday.MarkdownCommon(b))),
+			})
+		}
+	})
+	return http.ListenAndServe(c.String("addr"), nil)
 }
 
 func main() {
