@@ -21,7 +21,10 @@ import (
 	"github.com/fatih/color"
 	"github.com/mattn/go-isatty"
 	"github.com/mattn/go-runewidth"
+	"github.com/pkg/browser"
 	"github.com/russross/blackfriday"
+	"github.com/shurcooL/github_flavored_markdown"
+	"github.com/shurcooL/github_flavored_markdown/gfmstyle"
 	"github.com/urfave/cli"
 )
 
@@ -31,8 +34,8 @@ const templateDirContent = `
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="UTF-8">
-	<title>Memo Life For You</title>
+  <meta charset="UTF-8">
+  <title>Memo Life For You</title>
 </head>
 <style>
 li {list-style-type: none;}
@@ -51,14 +54,23 @@ const templateBodyContent = `
 <!DOCTYPE html>
 <html>
 <head>
-	<meta charset="UTF-8">
-	<title>{{.Name}}</title>
+  <meta charset="UTF-8">
+  <title>{{.Name}}</title>
+  <link href="/assets/gfm/gfm.css" media="all" rel="stylesheet" type="text/css" />
 </head>
 <body>
 {{.Body}}
 </body>
 </html>
 `
+
+const markdownExtensions = blackfriday.EXTENSION_NO_INTRA_EMPHASIS |
+	blackfriday.EXTENSION_TABLES |
+	blackfriday.EXTENSION_FENCED_CODE |
+	blackfriday.EXTENSION_AUTOLINK |
+	blackfriday.EXTENSION_STRIKETHROUGH |
+	blackfriday.EXTENSION_HARD_LINE_BREAK |
+	blackfriday.EXTENSION_SPACE_HEADERS
 
 type config struct {
 	MemoDir   string `toml:"memodir"`
@@ -363,17 +375,36 @@ func cmdServe(c *cli.Context) error {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
+			body := string(b)
+			if strings.HasPrefix(body, "---\n") {
+				if pos := strings.Index(body[4:], "---\n"); pos > 0 {
+					body = body[4+pos+4:]
+				}
+			}
+			//renderer := blackfriday.HtmlRenderer(0, "", "")
+			//body = string(blackfriday.Markdown([]byte(body), renderer, markdownExtensions))
+			body = string(github_flavored_markdown.Markdown([]byte(body)))
 			t := template.Must(template.New("body").Parse(templateBodyContent))
 			t.Execute(w, struct {
 				Name string
 				Body template.HTML
 			}{
 				Name: req.URL.Path,
-				Body: template.HTML(string(blackfriday.MarkdownCommon(b))),
+				Body: template.HTML(body),
 			})
 		}
 	})
-	return http.ListenAndServe(c.String("addr"), nil)
+	http.Handle("/assets/gfm/", http.StripPrefix("/assets/gfm", http.FileServer(gfmstyle.Assets)))
+
+	addr := c.String("addr")
+	var url string
+	if strings.HasPrefix(addr, ":") {
+		url = "http://localhost" + addr
+	} else {
+		url = "http://" + addr
+	}
+	browser.OpenURL(url)
+	return http.ListenAndServe(addr, nil)
 }
 
 func main() {
