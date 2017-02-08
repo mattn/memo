@@ -2,6 +2,8 @@
 
 Memo Life For You
 
+![Memo Life For You](https://raw.githubusercontent.com/mattn/memo/master/screenshot.gif)
+
 ## Usage
 
 ```
