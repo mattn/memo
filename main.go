@@ -65,6 +65,10 @@ const templateBodyContent = `
 </html>
 `
 
+const templateMemoContent = `# {{.Title}}
+
+`
+
 type config struct {
 	MemoDir   string `toml:"memodir"`
 	Editor    string `toml:"editor"`
@@ -311,9 +315,10 @@ func (cfg *config) runcmd(command, pattern string, files ...string) error {
 func cmdNew(c *cli.Context) error {
 	cfg := c.App.Metadata["config"].(*config)
 
+	var title string
 	var file string
 	if c.Args().Present() {
-		file = c.Args().First()
+		title = c.Args().First()
 	} else {
 		fmt.Print("Title: ")
 		scanner := bufio.NewScanner(os.Stdin)
@@ -323,10 +328,25 @@ func cmdNew(c *cli.Context) error {
 		if scanner.Err() != nil {
 			return scanner.Err()
 		}
-		file = scanner.Text()
+		title = scanner.Text()
 	}
-	file = time.Now().Format("2006-01-02-") + escape(file) + ".md"
+	file = time.Now().Format("2006-01-02-") + escape(title) + ".md"
 	file = filepath.Join(cfg.MemoDir, file)
+	t := template.Must(template.New("memo").Parse(templateMemoContent))
+	f, err := os.Create(file)
+	if err != nil {
+		return err
+	}
+
+	err = t.Execute(f, struct {
+		Title string
+	}{
+		title,
+	})
+	f.Close()
+	if err != nil {
+		return err
+	}
 	return cfg.runcmd(cfg.Editor, "", file)
 }
 
@@ -351,7 +371,7 @@ func cmdEdit(c *cli.Context) error {
 		cmd.Stdin = strings.NewReader(strings.Join(files, "\n"))
 		b, err := cmd.CombinedOutput()
 		if err != nil {
-			return err
+			return fmt.Errorf("you need to install peco first: https://github.com/peco/peco")
 		}
 		files = strings.Split(strings.TrimSpace(string(b)), "\n")
 		for i, file := range files {
