@@ -172,6 +172,9 @@ func (cfg *config) load() error {
 		if err != nil {
 			return err
 		}
+		cfg.MemoDir = expandPath(cfg.MemoDir)
+		cfg.AssetsDir = expandPath(cfg.AssetsDir)
+
 		dir := os.Getenv("MEMODIR")
 		if dir != "" {
 			cfg.MemoDir = dir
@@ -204,6 +207,17 @@ func (cfg *config) load() error {
 		cfg.MemoDir = dir
 	}
 	return toml.NewEncoder(f).Encode(cfg)
+}
+
+func expandPath(s string) string {
+	if len(s) >= 2 && s[0] == '~' && os.IsPathSeparator(s[1]) {
+		if runtime.GOOS == "windows" {
+			s = filepath.Join(os.Getenv("USERPROFILE"), s[2:])
+		} else {
+			s = filepath.Join(os.Getenv("HOME"), s[2:])
+		}
+	}
+	return os.Expand(s, os.Getenv)
 }
 
 func msg(err error) int {
@@ -321,7 +335,7 @@ func (cfg *config) runfilter(command string, r io.Reader, w io.Writer) error {
 		case "DIR":
 			return cfg.MemoDir
 		}
-		return ""
+		return os.Getenv(s)
 	})
 
 	var cmd *exec.Cmd
@@ -354,7 +368,7 @@ func (cfg *config) runcmd(command, pattern string, files ...string) error {
 		case "DIR":
 			return cfg.MemoDir
 		}
-		return ""
+		return os.Getenv(s)
 	})
 	if !hasEnv {
 		command += " " + cmdargs
