@@ -371,7 +371,7 @@ func cmdEdit(c *cli.Context) error {
 		cmd.Stdin = strings.NewReader(strings.Join(files, "\n"))
 		b, err := cmd.CombinedOutput()
 		if err != nil {
-			return fmt.Errorf("cannot run %q: you need to install peco first: https://github.com/peco/peco", cfg.SelectCmd)
+			return fmt.Errorf("cannot run %q: %v: you need to install peco first: https://github.com/peco/peco", cfg.SelectCmd, err)
 		}
 		files = strings.Split(strings.TrimSpace(string(b)), "\n")
 		for i, file := range files {
