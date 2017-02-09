@@ -79,31 +79,22 @@ memodir and assetsdir can be used `~/` prefix or `$HOME` or OS specific environm
 |${DIR}     |same as memodir|
 |${PATTERN} |grep pattern   |
 
-## FAQ
+## Supported GrepCmd
 
-### Want to use [ag](https://github.com/ggreer/the_silver_searcher) for grepcmd
 
-```
-grepcmd = "ag ${PATTERN} ${DIR}"
-```
+|Command                                            |Configuration                       |
+|---------------------------------------------------|------------------------------------|
+|GNU Grep                                           |grepcmd = "grep -nH" #default       |
+|[ag](https://github.com/ggreer/the_silver_searcher)|grepcmd = "ag ${PATTERN} ${DIR}"    |
+|[jvgrep](https://github.com/mattn/jvgrep)          |grepcmd = "jvgrep ${PATTERN} ${DIR}"|
 
-### Want to use [jvgrep](https://github.com/mattn/jvgrep) for grepcmd
+## Supported SelectCmd
 
-```
-grepcmd = "jvgrep ${PATTERN} ${DIR}"
-```
-
-### Want to use [gof](https://github.com/mattn/gof) for selectcmd
-
-```
-selectcmd = "gof"
-```
-
-### Want to use [fzf](https://github.com/junegunn/fzf) for selectcmd
-
-```
-selectcmd = "fzf"
-```
+|Command                               |Configuration    |
+|--------------------------------------|-----------------|
+|[gof](https://github.com/mattn/gof)   |selectcmd = "gof"|
+|[cho](https://github.com/mattn/cho)   |selectcmd = "cho"|
+|[fzf](https://github.com/junegunn/fzf)|selectcmd = "fzf"|
 
 ## License
 
