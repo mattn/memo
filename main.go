@@ -31,7 +31,7 @@ const (
 	column = 30
 
 	// VERSION is a version of this app
-	VERSION = "0.0.2"
+	VERSION = "0.0.3"
 )
 
 const templateDirContent = `
