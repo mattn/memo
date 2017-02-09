@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"errors"
 	"fmt"
 	"html/template"
@@ -314,6 +315,27 @@ func escape(name string) string {
 	return strings.Trim(strings.Replace(s, "--", "-", -1), "- ")
 }
 
+func (cfg *config) runfilter(command string, r io.Reader, w io.Writer) error {
+	command = os.Expand(command, func(s string) string {
+		switch s {
+		case "DIR":
+			return cfg.MemoDir
+		}
+		return ""
+	})
+
+	var cmd *exec.Cmd
+	if runtime.GOOS == "windows" {
+		cmd = exec.Command("cmd", "/c", command)
+	} else {
+		cmd = exec.Command("sh", "-c", command)
+	}
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = w
+	cmd.Stdin = r
+	return cmd.Run()
+}
+
 func (cfg *config) runcmd(command, pattern string, files ...string) error {
 	var args []string
 	for _, file := range files {
@@ -344,8 +366,8 @@ func (cfg *config) runcmd(command, pattern string, files ...string) error {
 	} else {
 		cmd = exec.Command("sh", "-c", command)
 	}
-	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
 	return cmd.Run()
 }
@@ -413,16 +435,20 @@ func cmdEdit(c *cli.Context) error {
 			return err
 		}
 		files = filterMarkdown(files)
-		cmd := exec.Command(cfg.SelectCmd)
-		cmd.Stdin = strings.NewReader(strings.Join(files, "\n"))
-		b, err := cmd.CombinedOutput()
+		var buf bytes.Buffer
+		err = cfg.runfilter(cfg.SelectCmd, strings.NewReader(strings.Join(files, "\n")), &buf)
 		if err != nil {
-			return fmt.Errorf("%v: you need to install peco first: https://github.com/peco/peco", err)
+			// TODO:
+			// Some select tools return non-zero, and some return zero.
+			// This part can't handle whether the command execute failure or
+			// the select command exit non-zero.
+			//return fmt.Errorf("%v: you need to install peco first: https://github.com/peco/peco", err)
+			return err
 		}
-		if len(b) == 0 {
+		if buf.Len() == 0 {
 			return errors.New("No files selected")
 		}
-		files = strings.Split(strings.TrimSpace(string(b)), "\n")
+		files = strings.Split(strings.TrimSpace(buf.String()), "\n")
 		for i, file := range files {
 			files[i] = filepath.Join(cfg.MemoDir, file)
 		}
