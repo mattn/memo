@@ -71,7 +71,7 @@ grepcmd = "grep -nH"              # grep command executable
 assetsdir = "/path/to/assets"     # assets directory for serve command
 ```
 
-editor, selectcmd, grepcmd can be used placeholder below.
+memodir and assetsdir can be used `~/` prefix or `$HOME` or OS specific environment variables. editor, selectcmd and grepcmd can be used placeholder below.
 
 |placeholder|replace to     |
 |-----------|---------------|
