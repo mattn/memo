@@ -412,6 +412,9 @@ func cmdEdit(c *cli.Context) error {
 		if err != nil {
 			return fmt.Errorf("%v: you need to install peco first: https://github.com/peco/peco", err)
 		}
+		if len(b) == 0 {
+			return errors.New("No files selected")
+		}
 		files = strings.Split(strings.TrimSpace(string(b)), "\n")
 		for i, file := range files {
 			files[i] = filepath.Join(cfg.MemoDir, file)
