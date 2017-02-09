@@ -21,6 +21,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/mattn/go-isatty"
 	"github.com/mattn/go-runewidth"
+	"github.com/mattn/go-tty"
 	"github.com/pkg/browser"
 	"github.com/shurcooL/github_flavored_markdown"
 	"github.com/shurcooL/github_flavored_markdown/gfmstyle"
@@ -109,6 +110,12 @@ var commands = []cli.Command{
 		Action:  cmdEdit,
 	},
 	{
+		Name:    "delete",
+		Aliases: []string{"d"},
+		Usage:   "delete memo",
+		Action:  cmdDelete,
+	},
+	{
 		Name:    "grep",
 		Aliases: []string{"g"},
 		Usage:   "grep memo",
@@ -147,14 +154,21 @@ func (cfg *config) load() error {
 		dir = filepath.Join(os.Getenv("HOME"), ".config", "memo")
 	}
 	if err := os.MkdirAll(dir, 0700); err != nil {
-		return err
+		return fmt.Errorf("cannot create directory: %v", err)
 	}
 	file := filepath.Join(dir, "config.toml")
 
 	_, err := os.Stat(file)
 	if err == nil {
 		_, err := toml.DecodeFile(file, cfg)
-		return err
+		if err != nil {
+			return err
+		}
+		dir := os.Getenv("MEMODIR")
+		if dir != "" {
+			cfg.MemoDir = dir
+		}
+		return nil
 	}
 
 	if !os.IsNotExist(err) {
@@ -176,6 +190,11 @@ func (cfg *config) load() error {
 	cfg.SelectCmd = "peco"
 	cfg.GrepCmd = "grep -nH ${PATTERN} ${FILES}"
 	cfg.AssetsDir = "."
+
+	dir = os.Getenv("MEMODIR")
+	if dir != "" {
+		cfg.MemoDir = dir
+	}
 	return toml.NewEncoder(f).Encode(cfg)
 }
 
@@ -198,23 +217,30 @@ func filterMarkdown(files []string) []string {
 	return newfiles
 }
 
-func run() int {
-	var cfg config
-	err := cfg.load()
+func ask(prompt string) (bool, error) {
+	fmt.Print(prompt + ": ")
+	t, err := tty.Open()
 	if err != nil {
-		return msg(err)
+		return false, err
 	}
-	dir := os.Getenv("MEMODIR")
-	if dir != "" {
-		cfg.MemoDir = dir
+	defer t.Close()
+	var r rune
+	for r == 0 {
+		r, err = t.ReadRune()
+		if err != nil {
+			return false, err
+		}
 	}
+	fmt.Println()
+	return r == 'y' || r == 'Y', nil
+}
 
+func run() int {
 	app := cli.NewApp()
 	app.Name = "memo"
 	app.Usage = "Memo Life For You"
 	app.Version = VERSION
 	app.Commands = commands
-	app.Metadata = map[string]interface{}{"config": &cfg}
 	return msg(app.Run(os.Args))
 }
 
@@ -234,7 +260,12 @@ func firstline(name string) string {
 }
 
 func cmdList(c *cli.Context) error {
-	cfg := c.App.Metadata["config"].(*config)
+	var cfg config
+	err := cfg.load()
+	if err != nil {
+		return err
+	}
+
 	f, err := os.Open(cfg.MemoDir)
 	if err != nil {
 		return err
@@ -313,7 +344,11 @@ func (cfg *config) runcmd(command, pattern string, files ...string) error {
 }
 
 func cmdNew(c *cli.Context) error {
-	cfg := c.App.Metadata["config"].(*config)
+	var cfg config
+	err := cfg.load()
+	if err != nil {
+		return err
+	}
 
 	var title string
 	var file string
@@ -351,7 +386,11 @@ func cmdNew(c *cli.Context) error {
 }
 
 func cmdEdit(c *cli.Context) error {
-	cfg := c.App.Metadata["config"].(*config)
+	var cfg config
+	err := cfg.load()
+	if err != nil {
+		return err
+	}
 
 	var files []string
 	if c.Args().Present() {
@@ -381,11 +420,67 @@ func cmdEdit(c *cli.Context) error {
 	return cfg.runcmd(cfg.Editor, "", files...)
 }
 
-func cmdGrep(c *cli.Context) error {
-	cfg := c.App.Metadata["config"].(*config)
+func cmdDelete(c *cli.Context) error {
+	var cfg config
+	err := cfg.load()
+	if err != nil {
+		return err
+	}
 
 	if !c.Args().Present() {
+		return errors.New("pattern required")
+	}
+	f, err := os.Open(cfg.MemoDir)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	files, err := f.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+	files = filterMarkdown(files)
+	pat := c.Args().First()
+	var args []string
+	for _, file := range files {
+		if pat != "" && !strings.Contains(file, pat) {
+			continue
+		}
+		fmt.Println(file)
+		args = append(args, filepath.Join(cfg.MemoDir, file))
+	}
+	if len(args) == 0 {
+		color.Yellow("%s", "No matched entry")
 		return nil
+	}
+	color.Red("%s", "Will delete those entry. Are you sure?")
+	answer, err := ask("Are you sure? (y/N)")
+	if answer == false || err != nil {
+		return err
+	}
+	answer, err = ask("Really? (y/N)")
+	if answer == false || err != nil {
+		return err
+	}
+	for _, arg := range args {
+		err = os.Remove(arg)
+		if err != nil {
+			return err
+		}
+		color.Yellow("Deleted: %v", arg)
+	}
+	return nil
+}
+
+func cmdGrep(c *cli.Context) error {
+	var cfg config
+	err := cfg.load()
+	if err != nil {
+		return err
+	}
+
+	if !c.Args().Present() {
+		return errors.New("pattern required")
 	}
 	f, err := os.Open(cfg.MemoDir)
 	if err != nil {
@@ -405,7 +500,11 @@ func cmdGrep(c *cli.Context) error {
 }
 
 func cmdConfig(c *cli.Context) error {
-	cfg := c.App.Metadata["config"].(*config)
+	var cfg config
+	err := cfg.load()
+	if err != nil {
+		return err
+	}
 
 	dir := os.Getenv("HOME")
 	if dir == "" && runtime.GOOS == "windows" {
@@ -422,7 +521,11 @@ func cmdConfig(c *cli.Context) error {
 }
 
 func cmdServe(c *cli.Context) error {
-	cfg := c.App.Metadata["config"].(*config)
+	var cfg config
+	err := cfg.load()
+	if err != nil {
+		return err
+	}
 
 	http.HandleFunc("/", func(w http.ResponseWriter, req *http.Request) {
 		if req.URL.Path == "/" {
