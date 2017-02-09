@@ -22,6 +22,7 @@ import (
 	"github.com/fatih/color"
 	"github.com/mattn/go-isatty"
 	"github.com/mattn/go-runewidth"
+	"github.com/mattn/go-shellwords"
 	"github.com/mattn/go-tty"
 	"github.com/pkg/browser"
 	"github.com/shurcooL/github_flavored_markdown"
@@ -413,7 +414,11 @@ func cmdEdit(c *cli.Context) error {
 			return err
 		}
 		files = filterMarkdown(files)
-		cmd := exec.Command(cfg.SelectCmd)
+		cmds, err := shellwords.Parse(cfg.SelectCmd)
+		if len(cmds) == 0 || err != nil {
+			return errors.New("selectcmd: invalid commands")
+		}
+		cmd := exec.Command(cmds[0], cmds[1:]...)
 		cmd.Stdin = strings.NewReader(strings.Join(files, "\n"))
 		b, err := cmd.CombinedOutput()
 		if err != nil {
