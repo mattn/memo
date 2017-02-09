@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"html/template"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -126,6 +127,12 @@ var commands = []cli.Command{
 		Aliases: []string{"c"},
 		Usage:   "configure",
 		Action:  cmdConfig,
+		Flags: []cli.Flag{
+			cli.BoolFlag{
+				Name:  "cat",
+				Usage: "cat the file",
+			},
+		},
 	},
 	{
 		Name:    "serve",
@@ -517,6 +524,16 @@ func cmdConfig(c *cli.Context) error {
 		dir = filepath.Join(dir, ".config", "memo")
 	}
 	file := filepath.Join(dir, "config.toml")
+	if c.Bool("cat") {
+		f, err := os.Open(file)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+		_, err = io.Copy(os.Stdout, f)
+		return err
+	}
+
 	return cfg.runcmd(cfg.Editor, "", file)
 }
 
