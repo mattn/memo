@@ -14,12 +14,13 @@ USAGE:
    memo [global options] command [command options] [arguments...]
 
 VERSION:
-   0.0.1
+   0.0.4
 
 COMMANDS:
      new, n     create memo
      list, l    list memo
      edit, e    edit memo
+     delete, d  delete memo
      grep, g    grep memo
      config, c  configure
      serve, s   start http server
