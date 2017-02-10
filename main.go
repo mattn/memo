@@ -557,7 +557,7 @@ func cmdConfig(c *cli.Context) error {
 	}
 
 	dir := os.Getenv("HOME")
-	if dir == "" && runtime.GOOS == "windows" {
+	if runtime.GOOS == "windows" {
 		dir = os.Getenv("APPDATA")
 		if dir == "" {
 			dir = filepath.Join(os.Getenv("USERPROFILE"), "Application Data", "memo")
