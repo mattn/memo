@@ -538,7 +538,7 @@ func cmdGrep(c *cli.Context) error {
 	}
 	defer f.Close()
 	files, err := f.Readdirnames(-1)
-	if err != nil {
+	if err != nil || len(files) == 0 {
 		return err
 	}
 	files = filterMarkdown(files)
