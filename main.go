@@ -401,7 +401,7 @@ func cmdNew(c *cli.Context) error {
 		fmt.Print("Title: ")
 		scanner := bufio.NewScanner(os.Stdin)
 		if !scanner.Scan() {
-			return errors.New("canceld")
+			return errors.New("canceled")
 		}
 		if scanner.Err() != nil {
 			return scanner.Err()
