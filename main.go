@@ -312,7 +312,7 @@ func cmdList(c *cli.Context) error {
 
 	var tmpl *tt.Template
 	if format := c.String("format"); format != "" {
-		t, err := tt.New("T").Parse(format)
+		t, err := tt.New("format").Parse(format)
 		if err != nil {
 			return err
 		}
