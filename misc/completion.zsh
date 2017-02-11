@@ -9,6 +9,22 @@ _memo_options() {
     _describe -t option "option" __memo_options
 }
 
+_memo_list_options() {
+    local -a __memo_list_options
+    __memo_list_options=(
+        '--fullpath:show file path'
+        '--format:print the result using a Go template string'
+     )
+    _describe -t option "option" __memo_list_options
+}
+
+_memo_serve_options() {
+    local -a ___memo_serve_options
+    ___memo_serve_options=(
+        '--addr:server address'
+     )
+    _describe -t option "option" ___memo_serve_options
+}
 _memo_sub_commands() {
     local -a __memo_sub_commands
     __memo_sub_commands=(
@@ -34,20 +50,19 @@ _memo_sub_commands() {
 
 _memo_list() {
     local -a __memo_list
-    PRE_IFS=$IFS
+    local PRE_IFS=$IFS
     IFS=$'\n'
-    __memo_list=($(memo list))
+    __memo_list=($(memo list --format '{{.File}}:{{.Title}}'))
     IFS=$PRE_IFS
     _describe -t memo "memo" __memo_list
 }
 
 _memo () {
-    local state line
+    local state line last_arg
 
     _arguments \
         '1: :->objects' \
-        '*: :->args' \
-        && ret=0
+        '*: :->args'
 
     case $state in
         objects)
@@ -66,6 +81,12 @@ _memo () {
             case $last_arg in
                 edit|e|delete|d)
                     _memo_list
+                    ;;
+                list|l)
+                    _memo_list_options
+                    ;;
+                serve|s)
+                    _memo_serve_options
                     ;;
                 *)
                     ;;
