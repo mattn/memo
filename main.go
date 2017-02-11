@@ -17,6 +17,7 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+	tt "text/template"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -102,6 +103,10 @@ var commands = []cli.Command{
 			cli.BoolFlag{
 				Name:  "fullpath",
 				Usage: "show file path",
+			},
+			cli.StringFlag{
+				Name:  "format",
+				Usage: "print the result using a Go template `string`",
 			},
 		},
 	},
@@ -304,12 +309,33 @@ func cmdList(c *cli.Context) error {
 		col = column
 	}
 	pat := c.Args().First()
+
+	var tmpl *tt.Template
+	if format := c.String("format"); format != "" {
+		t, err := tt.New("T").Parse(format)
+		if err != nil {
+			return err
+		}
+		tmpl = t
+	}
+
 	fullpath := c.Bool("fullpath")
 	for _, file := range files {
 		if pat != "" && !strings.Contains(file, pat) {
 			continue
 		}
-		if istty && !fullpath {
+		if tmpl != nil {
+			var b bytes.Buffer
+			err := tmpl.Execute(&b, map[string]interface{}{
+				"File":     file,
+				"Title":    firstline(filepath.Join(cfg.MemoDir, file)),
+				"Fullpath": filepath.Join(cfg.MemoDir, file),
+			})
+			if err != nil {
+				return err
+			}
+			fmt.Println(b.String())
+		} else if istty && !fullpath {
 			title := runewidth.Truncate(firstline(filepath.Join(cfg.MemoDir, file)), 80-4-col, "...")
 			file = runewidth.FillRight(runewidth.Truncate(file, col, "..."), col)
 			fmt.Fprintf(color.Output, "%s : %s\n", color.GreenString(file), color.YellowString(title))
