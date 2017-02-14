@@ -268,6 +268,27 @@ func run() int {
 	app.Usage = "Memo Life For You"
 	app.Version = VERSION
 	app.Commands = commands
+	app.Action = func(c *cli.Context) error {
+		args := c.Args()
+		if args.Present() {
+			xcmd := fmt.Sprintf("memo-%s", args.First())
+			xcmdpath, err := exec.LookPath(xcmd)
+			if err != nil {
+				return fmt.Errorf("'%s' is not a memo command. see 'memo help'", args.First())
+			}
+
+			// run external command as a memo subcommand.
+			xargs := args.Tail()
+			cmd := exec.Command(xcmdpath, xargs...)
+			cmd.Stderr = os.Stderr
+			cmd.Stdout = os.Stdout
+			cmd.Stdin = os.Stdin
+			return cmd.Run()
+		}
+
+		return cli.ShowAppHelp(c)
+	}
+
 	return msg(app.Run(os.Args))
 }
 
