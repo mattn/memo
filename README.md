@@ -96,6 +96,11 @@ memodir and assetsdir can be used `~/` prefix or `$HOME` or OS specific environm
 |[cho](https://github.com/mattn/cho)   |selectcmd = "cho"|
 |[fzf](https://github.com/junegunn/fzf)|selectcmd = "fzf"|
 
+## Extend With Custom Commands
+
+You can extend memo with custom commands. 
+Place an executable file with a name like `memo-foo` in your $PATH, memo can use it as a subcommand: `memo foo`.
+
 ## License
 
 MIT
