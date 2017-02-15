@@ -689,28 +689,28 @@ func cmdServe(c *cli.Context) error {
 
 func appRun(c *cli.Context) error {
 	args := c.Args()
-	if args.Present() {
-		var cfg config
-		err := cfg.load()
-		if err != nil {
-			return err
-		}
-		xcmdpath := filepath.Join(cfg.PluginsDir, args.First())
-		_, err = exec.LookPath(xcmdpath)
-		if err != nil {
-			return fmt.Errorf("'%s' is not a memo command. see 'memo help'", args.First())
-		}
-
-		// run external command as a memo subcommand.
-		xargs := args.Tail()
-		cmd := exec.Command(xcmdpath, xargs...)
-		cmd.Stderr = os.Stderr
-		cmd.Stdout = os.Stdout
-		cmd.Stdin = os.Stdin
-		return cmd.Run()
+	if !args.Present() {
+		return cli.ShowAppHelp(c)
 	}
 
-	return cli.ShowAppHelp(c)
+	var cfg config
+	err := cfg.load()
+	if err != nil {
+		return err
+	}
+	xcmdpath := filepath.Join(cfg.PluginsDir, args.First())
+	_, err = exec.LookPath(xcmdpath)
+	if err != nil {
+		return fmt.Errorf("'%s' is not a memo command. see 'memo help'", args.First())
+	}
+
+	// run external command as a memo subcommand.
+	xargs := args.Tail()
+	cmd := exec.Command(xcmdpath, xargs...)
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.Stdin = os.Stdin
+	return cmd.Run()
 }
 
 func main() {
