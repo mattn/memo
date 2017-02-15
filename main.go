@@ -698,24 +698,31 @@ func listPlugins(fn func(string)) error {
 		return err
 	}
 	defer dir.Close()
-	fis, err := dir.Readdir(-1)
+	names, err := dir.Readdirnames(-1)
 	if err != nil {
 		return err
 	}
+	sort.Strings(names)
+
 	fmt.Println("\nSUB COMMANDS:")
 
 	if runtime.GOOS != "windows" {
-		for _, fi := range fis {
+		for _, name := range names {
+			p := filepath.Join(cfg.PluginsDir, name)
+			fi, err := os.Stat(p)
+			if err != nil {
+				continue
+			}
 			if m := fi.Mode(); !m.IsDir() && m&0111 != 0 {
 				fn(filepath.Join(cfg.PluginsDir, fi.Name()))
 			}
 		}
 	} else {
 		pathext := strings.Split(strings.ToLower(os.Getenv("PATHEXT")), ";")
-		for _, fi := range fis {
+		for _, name := range names {
 			for _, p := range pathext {
-				if strings.ToLower(filepath.Ext(fi.Name())) == p {
-					fn(filepath.Join(cfg.PluginsDir, fi.Name()))
+				if strings.ToLower(filepath.Ext(name)) == p {
+					fn(filepath.Join(cfg.PluginsDir, name))
 					break
 				}
 			}
