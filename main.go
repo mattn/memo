@@ -729,7 +729,7 @@ func appRun(c *cli.Context) error {
 	if !args.Present() {
 		cli.ShowAppHelp(c)
 		listPlugins(func(s string) {
-			b, err := exec.Command(s, "--usage").CombinedOutput()
+			b, err := exec.Command(s, "-usage").CombinedOutput()
 			if err != nil {
 				return
 			}
