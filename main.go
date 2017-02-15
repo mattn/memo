@@ -278,31 +278,7 @@ func run() int {
 	app.Usage = "Memo Life For You"
 	app.Version = VERSION
 	app.Commands = commands
-	app.Action = func(c *cli.Context) error {
-		args := c.Args()
-		if args.Present() {
-			var cfg config
-			err := cfg.load()
-			if err != nil {
-				return err
-			}
-			xcmdpath := filepath.Join(cfg.PluginsDir, args.First())
-			_, err = exec.LookPath(xcmdpath)
-			if err != nil {
-				return fmt.Errorf("'%s' is not a memo command. see 'memo help'", args.First())
-			}
-
-			// run external command as a memo subcommand.
-			xargs := args.Tail()
-			cmd := exec.Command(xcmdpath, xargs...)
-			cmd.Stderr = os.Stderr
-			cmd.Stdout = os.Stdout
-			cmd.Stdin = os.Stdin
-			return cmd.Run()
-		}
-
-		return cli.ShowAppHelp(c)
-	}
+	app.Action = appRun
 
 	return msg(app.Run(os.Args))
 }
@@ -709,6 +685,32 @@ func cmdServe(c *cli.Context) error {
 	}
 	browser.OpenURL(url)
 	return http.ListenAndServe(addr, nil)
+}
+
+func appRun(c *cli.Context) error {
+	args := c.Args()
+	if args.Present() {
+		var cfg config
+		err := cfg.load()
+		if err != nil {
+			return err
+		}
+		xcmdpath := filepath.Join(cfg.PluginsDir, args.First())
+		_, err = exec.LookPath(xcmdpath)
+		if err != nil {
+			return fmt.Errorf("'%s' is not a memo command. see 'memo help'", args.First())
+		}
+
+		// run external command as a memo subcommand.
+		xargs := args.Tail()
+		cmd := exec.Command(xcmdpath, xargs...)
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = os.Stdout
+		cmd.Stdin = os.Stdin
+		return cmd.Run()
+	}
+
+	return cli.ShowAppHelp(c)
 }
 
 func main() {
