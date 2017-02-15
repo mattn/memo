@@ -103,6 +103,8 @@ You can extend memo with custom commands.
 Place an executable file in your `pluginsdir`, memo can use it as a subcommand.
 For example, If you place `foo` file in your `pluginsdir`, you can run it by `memo foo`.
 
+Plugin MUST handle `-usage` option to show briefly.
+
 ## License
 
 MIT
