@@ -107,6 +107,7 @@ Below is spec of plugins:
 
 * MUST handle `-usage` option to show briefly, at least.
 * MUST NOT handle `--xxx` option.
+* MUST NOT use multi-byte strings in the usage.
 
 ## License
 
