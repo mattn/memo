@@ -734,13 +734,13 @@ func appRun(c *cli.Context) error {
 				return
 			}
 			s = filepath.Base(s)
-			if runtime.GOOS != "windows" {
+			if runtime.GOOS == "windows" {
 				s = s[:len(s)-len(filepath.Ext(s))]
 			}
 			fmt.Println("     " + s)
 			lines := strings.Split(string(b), "\n")
 			for _, line := range lines {
-				fmt.Println("     " + line)
+				fmt.Println("       " + line)
 			}
 		})
 		return nil
