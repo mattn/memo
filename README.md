@@ -69,6 +69,7 @@ column = 30                       # column size for list command
 selectcmd = "peco"                # selector command for edit command
 grepcmd = "grep -nH"              # grep command executable
 assetsdir = "/path/to/assets"     # assets directory for serve command
+pluginsdir = "path/to/plugins"    # plugins directory for plugin commands. default '~/.config/memo/plugins'.
 ```
 
 memodir and assetsdir can be used `~/` prefix or `$HOME` or OS specific environment variables. editor, selectcmd and grepcmd can be used placeholder below.
@@ -96,10 +97,11 @@ memodir and assetsdir can be used `~/` prefix or `$HOME` or OS specific environm
 |[cho](https://github.com/mattn/cho)   |selectcmd = "cho"|
 |[fzf](https://github.com/junegunn/fzf)|selectcmd = "fzf"|
 
-## Extend With Custom Commands
+## Extend With Plugin Commands
 
 You can extend memo with custom commands. 
-Place an executable file with a name like `memo-foo` in your $PATH, memo can use it as a subcommand: `memo foo`.
+Place an executable file in your `pluginsdir`, memo can use it as a subcommand.
+For example, If you place `foo` file in your `pluginsdir`, you can run it by `memo foo`.
 
 ## License
 
