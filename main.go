@@ -74,12 +74,13 @@ const templateMemoContent = `# {{.Title}}
 `
 
 type config struct {
-	MemoDir   string `toml:"memodir"`
-	Editor    string `toml:"editor"`
-	Column    int    `toml:"column"`
-	SelectCmd string `toml:"selectcmd"`
-	GrepCmd   string `toml:"grepcmd"`
-	AssetsDir string `toml:"assetsdir"`
+	MemoDir    string `toml:"memodir"`
+	Editor     string `toml:"editor"`
+	Column     int    `toml:"column"`
+	SelectCmd  string `toml:"selectcmd"`
+	GrepCmd    string `toml:"grepcmd"`
+	AssetsDir  string `toml:"assetsdir"`
+	PluginsDir string `toml:"pluginsdir"`
 }
 
 type entry struct {
@@ -171,6 +172,8 @@ func (cfg *config) load() error {
 	}
 	file := filepath.Join(dir, "config.toml")
 
+	confDir := dir
+
 	_, err := os.Stat(file)
 	if err == nil {
 		_, err := toml.DecodeFile(file, cfg)
@@ -179,6 +182,10 @@ func (cfg *config) load() error {
 		}
 		cfg.MemoDir = expandPath(cfg.MemoDir)
 		cfg.AssetsDir = expandPath(cfg.AssetsDir)
+		if cfg.PluginsDir == "" {
+			cfg.PluginsDir = filepath.Join(confDir, "plugins")
+		}
+		cfg.PluginsDir = expandPath(cfg.PluginsDir)
 
 		dir := os.Getenv("MEMODIR")
 		if dir != "" {
@@ -206,6 +213,9 @@ func (cfg *config) load() error {
 	cfg.SelectCmd = "peco"
 	cfg.GrepCmd = "grep -nH ${PATTERN} ${FILES}"
 	cfg.AssetsDir = "."
+	dir = filepath.Join(confDir, "plugins")
+	os.MkdirAll(dir, 0700)
+	cfg.PluginsDir = dir
 
 	dir = os.Getenv("MEMODIR")
 	if dir != "" {
@@ -268,6 +278,8 @@ func run() int {
 	app.Usage = "Memo Life For You"
 	app.Version = VERSION
 	app.Commands = commands
+	app.Action = appRun
+
 	return msg(app.Run(os.Args))
 }
 
@@ -673,6 +685,32 @@ func cmdServe(c *cli.Context) error {
 	}
 	browser.OpenURL(url)
 	return http.ListenAndServe(addr, nil)
+}
+
+func appRun(c *cli.Context) error {
+	args := c.Args()
+	if args.Present() {
+		var cfg config
+		err := cfg.load()
+		if err != nil {
+			return err
+		}
+		xcmdpath := filepath.Join(cfg.PluginsDir, args.First())
+		_, err = exec.LookPath(xcmdpath)
+		if err != nil {
+			return fmt.Errorf("'%s' is not a memo command. see 'memo help'", args.First())
+		}
+
+		// run external command as a memo subcommand.
+		xargs := args.Tail()
+		cmd := exec.Command(xcmdpath, xargs...)
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = os.Stdout
+		cmd.Stdin = os.Stdin
+		return cmd.Run()
+	}
+
+	return cli.ShowAppHelp(c)
 }
 
 func main() {
