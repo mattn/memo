@@ -687,10 +687,63 @@ func cmdServe(c *cli.Context) error {
 	return http.ListenAndServe(addr, nil)
 }
 
+func listPlugins(fn func(string)) error {
+	var cfg config
+	err := cfg.load()
+	if err != nil {
+		return err
+	}
+	dir, err := os.Open(cfg.PluginsDir)
+	if err != nil {
+		return err
+	}
+	defer dir.Close()
+	fis, err := dir.Readdir(-1)
+	if err != nil {
+		return err
+	}
+	fmt.Println("\nSUB COMMANDS:")
+
+	if runtime.GOOS != "windows" {
+		for _, fi := range fis {
+			if m := fi.Mode(); !m.IsDir() && m&0111 != 0 {
+				fn(filepath.Join(cfg.PluginsDir, fi.Name()))
+			}
+		}
+	} else {
+		pathext := strings.Split(strings.ToLower(os.Getenv("PATHEXT")), ";")
+		for _, fi := range fis {
+			for _, p := range pathext {
+				if strings.ToLower(filepath.Ext(fi.Name())) == p {
+					fn(filepath.Join(cfg.PluginsDir, fi.Name()))
+					break
+				}
+			}
+		}
+	}
+	return nil
+}
+
 func appRun(c *cli.Context) error {
 	args := c.Args()
 	if !args.Present() {
-		return cli.ShowAppHelp(c)
+		cli.ShowAppHelp(c)
+		listPlugins(func(s string) {
+			b, err := exec.Command(s, "--usage").CombinedOutput()
+			if err != nil {
+				return
+			}
+			s = filepath.Base(s)
+			if runtime.GOOS != "windows" {
+				s = s[:len(s)-len(filepath.Ext(s))]
+			}
+			fmt.Println("     " + s)
+			lines := strings.Split(string(b), "\n")
+			for _, line := range lines {
+				fmt.Println("     " + line)
+			}
+		})
+		return nil
 	}
 
 	var cfg config
