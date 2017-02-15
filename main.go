@@ -74,12 +74,13 @@ const templateMemoContent = `# {{.Title}}
 `
 
 type config struct {
-	MemoDir   string `toml:"memodir"`
-	Editor    string `toml:"editor"`
-	Column    int    `toml:"column"`
-	SelectCmd string `toml:"selectcmd"`
-	GrepCmd   string `toml:"grepcmd"`
-	AssetsDir string `toml:"assetsdir"`
+	MemoDir    string `toml:"memodir"`
+	Editor     string `toml:"editor"`
+	Column     int    `toml:"column"`
+	SelectCmd  string `toml:"selectcmd"`
+	GrepCmd    string `toml:"grepcmd"`
+	AssetsDir  string `toml:"assetsdir"`
+	PluginsDir string `toml:"pluginsdir"`
 }
 
 type entry struct {
@@ -171,6 +172,8 @@ func (cfg *config) load() error {
 	}
 	file := filepath.Join(dir, "config.toml")
 
+	confDir := dir
+
 	_, err := os.Stat(file)
 	if err == nil {
 		_, err := toml.DecodeFile(file, cfg)
@@ -179,6 +182,10 @@ func (cfg *config) load() error {
 		}
 		cfg.MemoDir = expandPath(cfg.MemoDir)
 		cfg.AssetsDir = expandPath(cfg.AssetsDir)
+		if cfg.PluginsDir == "" {
+			cfg.PluginsDir = filepath.Join(confDir, "plugins")
+		}
+		cfg.PluginsDir = expandPath(cfg.PluginsDir)
 
 		dir := os.Getenv("MEMODIR")
 		if dir != "" {
@@ -206,6 +213,9 @@ func (cfg *config) load() error {
 	cfg.SelectCmd = "peco"
 	cfg.GrepCmd = "grep -nH ${PATTERN} ${FILES}"
 	cfg.AssetsDir = "."
+	dir = filepath.Join(confDir, "plugins")
+	os.MkdirAll(dir, 0700)
+	cfg.PluginsDir = dir
 
 	dir = os.Getenv("MEMODIR")
 	if dir != "" {
@@ -271,8 +281,13 @@ func run() int {
 	app.Action = func(c *cli.Context) error {
 		args := c.Args()
 		if args.Present() {
-			xcmd := fmt.Sprintf("memo-%s", args.First())
-			xcmdpath, err := exec.LookPath(xcmd)
+			var cfg config
+			err := cfg.load()
+			if err != nil {
+				return err
+			}
+			xcmdpath := filepath.Join(cfg.PluginsDir, args.First())
+			_, err = exec.LookPath(xcmdpath)
 			if err != nil {
 				return fmt.Errorf("'%s' is not a memo command. see 'memo help'", args.First())
 			}
