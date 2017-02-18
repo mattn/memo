@@ -74,13 +74,15 @@ const templateMemoContent = `# {{.Title}}
 `
 
 type config struct {
-	MemoDir    string `toml:"memodir"`
-	Editor     string `toml:"editor"`
-	Column     int    `toml:"column"`
-	SelectCmd  string `toml:"selectcmd"`
-	GrepCmd    string `toml:"grepcmd"`
-	AssetsDir  string `toml:"assetsdir"`
-	PluginsDir string `toml:"pluginsdir"`
+	MemoDir          string `toml:"memodir"`
+	Editor           string `toml:"editor"`
+	Column           int    `toml:"column"`
+	SelectCmd        string `toml:"selectcmd"`
+	GrepCmd          string `toml:"grepcmd"`
+	AssetsDir        string `toml:"assetsdir"`
+	PluginsDir       string `toml:"pluginsdir"`
+	TemplateDirFile  string `toml:"templatedirfile"`
+	TemplateBodyFile string `toml:"templatebodyfile"`
 }
 
 type entry struct {
@@ -647,7 +649,17 @@ func cmdServe(c *cli.Context) error {
 				})
 			}
 			w.Header().Set("content-type", "text/html")
-			t := template.Must(template.New("dir").Parse(templateDirContent))
+			cfg.TemplateDirFile = expandPath(cfg.TemplateDirFile)
+			var t *template.Template
+			if cfg.TemplateDirFile == "" {
+				t = template.Must(template.New("dir").Parse(templateDirContent))
+			} else {
+				t, err = template.ParseFiles(cfg.TemplateDirFile)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+			}
 			err = t.Execute(w, entries)
 			if err != nil {
 				log.Println(err)
@@ -666,7 +678,17 @@ func cmdServe(c *cli.Context) error {
 				}
 			}
 			body = string(github_flavored_markdown.Markdown([]byte(body)))
-			t := template.Must(template.New("body").Parse(templateBodyContent))
+			cfg.TemplateBodyFile = expandPath(cfg.TemplateBodyFile)
+			var t *template.Template
+			if cfg.TemplateBodyFile == "" {
+				t = template.Must(template.New("body").Parse(templateBodyContent))
+			} else {
+				t, err = template.ParseFiles(cfg.TemplateBodyFile)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+			}
 			t.Execute(w, entry{
 				Name: req.URL.Path,
 				Body: template.HTML(body),
