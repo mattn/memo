@@ -424,6 +424,11 @@ func (cfg *config) runcmd(command, pattern string, files ...string) error {
 	return cmd.Run()
 }
 
+func fileExists(filename string) bool {
+	_, err := os.Stat(filename)
+	return err == nil
+}
+
 func cmdNew(c *cli.Context) error {
 	var cfg config
 	err := cfg.load()
@@ -449,6 +454,11 @@ func cmdNew(c *cli.Context) error {
 	file = time.Now().Format("2006-01-02-") + escape(title) + ".md"
 	file = filepath.Join(cfg.MemoDir, file)
 	t := template.Must(template.New("memo").Parse(templateMemoContent))
+
+	if fileExists(file) {
+		return fmt.Errorf("file %s already exists", file)
+	}
+
 	f, err := os.Create(file)
 	if err != nil {
 		return err
