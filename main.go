@@ -252,7 +252,7 @@ func filterMarkdown(files []string) []string {
 			newfiles = append(newfiles, file)
 		}
 	}
-	sort.Strings(newfiles)
+	sort.Sort(sort.Reverse(sort.StringSlice(newfiles)))
 	return newfiles
 }
 
