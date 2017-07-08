@@ -458,7 +458,7 @@ func cmdNew(c *cli.Context) error {
 	t := template.Must(template.New("memo").Parse(templateMemoContent))
 
 	if fileExists(file) {
-		return fmt.Errorf("file %s already exists", file)
+		return cfg.runcmd(cfg.Editor, "", file)
 	}
 
 	f, err := os.Create(file)
