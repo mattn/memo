@@ -452,8 +452,15 @@ func cmdNew(c *cli.Context) error {
 			return scanner.Err()
 		}
 		title = scanner.Text()
+		if title == "" {
+			title = time.Now().Format("2006-01-02")
+			file = title + ".md"
+			
+		} else {
+			file = time.Now().Format("2006-01-02-") + escape(title) + ".md"
+		}
+
 	}
-	file = time.Now().Format("2006-01-02-") + escape(title) + ".md"
 	file = filepath.Join(cfg.MemoDir, file)
 	t := template.Must(template.New("memo").Parse(templateMemoContent))
 
