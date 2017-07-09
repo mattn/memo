@@ -453,8 +453,9 @@ func cmdNew(c *cli.Context) error {
 		}
 		title = scanner.Text()
 		if title == "" {
-			file = time.Now().Format("2006-01-02") + ".md"
 			title = time.Now().Format("2006-01-02")
+			file = title + ".md"
+			
 		} else {
 			file = time.Now().Format("2006-01-02-") + escape(title) + ".md"
 		}
