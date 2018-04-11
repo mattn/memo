@@ -58,8 +58,8 @@
 [[projects]]
   name = "github.com/russross/blackfriday"
   packages = ["."]
-  revision = "cadec560ec52d93835bf2f15bd794700d3a2473b"
-  version = "v2.0.0"
+  revision = "55d61fa8aa702f59229e6cff85793c22e580eaf5"
+  version = "v1.5.1"
 
 [[projects]]
   name = "github.com/sergi/go-diff"
@@ -159,6 +159,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6320ac30709470eafc92b6ab488c8a6d2ea84d2e3d76cbfa533999bb1b8746a2"
+  inputs-digest = "addee0e38ff716b25fed05f24abdceb485859dcebcb92e509e89921217da5f4e"
   solver-name = "gps-cdcl"
   solver-version = 1
