@@ -1,0 +1,40 @@
+
+[[constraint]]
+  name = "github.com/BurntSushi/toml"
+  version = "0.3.0"
+
+[[constraint]]
+  name = "github.com/fatih/color"
+  version = "1.6.0"
+
+[[constraint]]
+  name = "github.com/mattn/go-isatty"
+  version = "0.0.3"
+
+[[constraint]]
+  name = "github.com/mattn/go-runewidth"
+  version = "0.0.2"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/mattn/go-tty"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/pkg/browser"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/shurcooL/github_flavored_markdown"
+
+[[constraint]]
+  name = "github.com/urfave/cli"
+  version = "1.20.0"
+
+[[override]]
+  name = "github.com/russross/blackfriday"
+  version = "1.5.1"
+
+[prune]
+  go-tests = true
+  unused-packages = true
