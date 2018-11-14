@@ -472,12 +472,16 @@ func cmdNew(c *cli.Context) error {
 		return cfg.runcmd(cfg.Editor, "", file)
 	}
 
-	var t *template.Template
+	tmplString := templateMemoContent
+
 	if fileExists(cfg.MemoTemplate) {
-		t = template.Must(template.ParseFiles(cfg.MemoTemplate))
-	} else {
-		t = template.Must(template.New("memo").Parse(templateMemoContent))
+		b, err := ioutil.ReadFile(cfg.MemoTemplate)
+		if err != nil {
+			return err
+		}
+		tmplString = filterTmpl(string(b))
 	}
+	t := template.Must(template.New("memo").Parse(tmplString))
 
 	f, err := os.Create(file)
 	if err != nil {
@@ -494,6 +498,15 @@ func cmdNew(c *cli.Context) error {
 		return err
 	}
 	return cfg.runcmd(cfg.Editor, "", file)
+}
+
+var filterReg = regexp.MustCompile(`{{_(.+?)_}}`)
+
+func filterTmpl(tmpl string) string {
+	return filterReg.ReplaceAllStringFunc(tmpl, func(substr string) string {
+		m := filterReg.FindStringSubmatch(substr)
+		return fmt.Sprintf("{{.%s}}", strings.Title(m[1]))
+	})
 }
 
 func cmdEdit(c *cli.Context) error {
