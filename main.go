@@ -70,7 +70,6 @@ const templateBodyContent = `
 `
 
 const templateMemoContent = `# {{.Title}}
-
 `
 
 type config struct {
@@ -79,6 +78,7 @@ type config struct {
 	Column           int    `toml:"column"`
 	SelectCmd        string `toml:"selectcmd"`
 	GrepCmd          string `toml:"grepcmd"`
+	MemoTemplate     string `toml:"memotemplate"`
 	AssetsDir        string `toml:"assetsdir"`
 	PluginsDir       string `toml:"pluginsdir"`
 	TemplateDirFile  string `toml:"templatedirfile"`
@@ -188,6 +188,11 @@ func (cfg *config) load() error {
 			cfg.PluginsDir = filepath.Join(confDir, "plugins")
 		}
 		cfg.PluginsDir = expandPath(cfg.PluginsDir)
+
+		if cfg.MemoTemplate == "" {
+			cfg.MemoTemplate = filepath.Join(confDir, "template.txt")
+		}
+		cfg.MemoTemplate = expandPath(cfg.MemoTemplate)
 
 		dir := os.Getenv("MEMODIR")
 		if dir != "" {
@@ -440,9 +445,10 @@ func cmdNew(c *cli.Context) error {
 
 	var title string
 	var file string
+	now := time.Now()
 	if c.Args().Present() {
 		title = c.Args().First()
-		file = time.Now().Format("2006-01-02-") + escape(title) + ".md"
+		file = now.Format("2006-01-02-") + escape(title) + ".md"
 	} else {
 		fmt.Print("Title: ")
 		scanner := bufio.NewScanner(os.Stdin)
@@ -454,19 +460,23 @@ func cmdNew(c *cli.Context) error {
 		}
 		title = scanner.Text()
 		if title == "" {
-			title = time.Now().Format("2006-01-02")
+			title = now.Format("2006-01-02")
 			file = title + ".md"
-			
-		} else {
-			file = time.Now().Format("2006-01-02-") + escape(title) + ".md"
-		}
 
+		} else {
+			file = now.Format("2006-01-02-") + escape(title) + ".md"
+		}
 	}
 	file = filepath.Join(cfg.MemoDir, file)
-	t := template.Must(template.New("memo").Parse(templateMemoContent))
-
 	if fileExists(file) {
 		return cfg.runcmd(cfg.Editor, "", file)
+	}
+
+	var t *template.Template
+	if fileExists(cfg.MemoTemplate) {
+		t = template.Must(template.ParseFiles(cfg.MemoTemplate))
+	} else {
+		t = template.Must(template.New("memo").Parse(templateMemoContent))
 	}
 
 	f, err := os.Create(file)
@@ -475,9 +485,9 @@ func cmdNew(c *cli.Context) error {
 	}
 
 	err = t.Execute(f, struct {
-		Title string
+		Title, Date, Tags, Categories string
 	}{
-		title,
+		title, now.Format("2006-01-02 15:04"), "", "",
 	})
 	f.Close()
 	if err != nil {
