@@ -217,7 +217,7 @@ func (cfg *config) load() error {
 	cfg.AssetsDir = "."
 	dir = filepath.Join(confDir, "plugins")
 	os.MkdirAll(dir, 0700)
-	cfg.PluginsDir = dir
+	cfg.PluginsDir = filepath.ToSlash(dir)
 
 	dir = os.Getenv("MEMODIR")
 	if dir != "" {
