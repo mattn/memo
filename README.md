@@ -64,6 +64,7 @@ run `memo config`.
 
 ```toml
 memodir = "/path/to/you/memo/dir" # specify memo directory
+memotemplate = "path/to/tmpl.txt" # optional memo template file. default '~/.config/memo/template.txt'
 editor = "vim"                    # your favorite text editor
 column = 30                       # column size for list command
 selectcmd = "peco"                # selector command for edit command
@@ -72,13 +73,45 @@ assetsdir = "/path/to/assets"     # assets directory for serve command
 pluginsdir = "path/to/plugins"    # plugins directory for plugin commands. default '~/.config/memo/plugins'.
 ```
 
-memodir and assetsdir can be used `~/` prefix or `$HOME` or OS specific environment variables. editor, selectcmd and grepcmd can be used placeholder below.
+memodir, memotemplate and assetsdir can be used `~/` prefix or `$HOME` or OS specific environment variables. editor, selectcmd and grepcmd can be used placeholder below.
 
 |placeholder|replace to     |
 |-----------|---------------|
 |${FILES}   |target files   |
 |${DIR}     |same as memodir|
 |${PATTERN} |grep pattern   |
+
+## Memo Template
+
+You can use memo template using Go's text/template format. A template receives the following attributes.
+
+- Title
+- Date (format: %Y-%m-%d %H:%M)
+- Categories (always empty)
+- Tags (always empty)
+
+The following is a template example to apply YAML Frontmatter.
+
+```
+---
+title: {{.Title}}
+date: {{.Date}}
+---
+
+{{.Title}}
+===========
+```
+
+You can also use glidenote/memolist.vim's template format like following.
+
+```
+title: {{_title_}}
+==========
+date: {{_date_}}
+tags: [{{_tags_}}]
+categories: [{{_categories_}}]
+----------
+```
 
 ## Supported GrepCmd
 
