@@ -33,6 +33,7 @@ import (
 
 const (
 	column = 30
+	width  = 80
 
 	// VERSION is a version of this app
 	VERSION = "0.0.4"
@@ -76,6 +77,7 @@ type config struct {
 	MemoDir          string `toml:"memodir"`
 	Editor           string `toml:"editor"`
 	Column           int    `toml:"column"`
+	Width            int    `toml:"width"`
 	SelectCmd        string `toml:"selectcmd"`
 	GrepCmd          string `toml:"grepcmd"`
 	MemoTemplate     string `toml:"memotemplate"`
@@ -355,7 +357,11 @@ func cmdList(c *cli.Context) error {
 			}
 			fmt.Println(b.String())
 		} else if istty && !fullpath {
-			title := runewidth.Truncate(firstline(filepath.Join(cfg.MemoDir, file)), 80-4-col, "...")
+			wi = cfg.Width
+			if wi == 0 {
+				wi = width
+			}
+			title := runewidth.Truncate(firstline(filepath.Join(cfg.MemoDir, file)), wi-4-col, "...")
 			file = runewidth.FillRight(runewidth.Truncate(file, col, "..."), col)
 			fmt.Fprintf(color.Output, "%s : %s\n", color.GreenString(file), color.YellowString(title))
 		} else {
