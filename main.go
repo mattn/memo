@@ -357,7 +357,7 @@ func cmdList(c *cli.Context) error {
 			}
 			fmt.Println(b.String())
 		} else if istty && !fullpath {
-			wi = cfg.Width
+			wi := cfg.Width
 			if wi == 0 {
 				wi = width
 			}
