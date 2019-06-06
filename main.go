@@ -22,9 +22,9 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/fatih/color"
-	"github.com/mattn/go-isatty"
-	"github.com/mattn/go-runewidth"
-	"github.com/mattn/go-tty"
+	isatty "github.com/mattn/go-isatty"
+	runewidth "github.com/mattn/go-runewidth"
+	tty "github.com/mattn/go-tty"
 	"github.com/pkg/browser"
 	"github.com/shurcooL/github_flavored_markdown"
 	"github.com/shurcooL/github_flavored_markdown/gfmstyle"
@@ -120,6 +120,12 @@ var commands = []cli.Command{
 		Aliases: []string{"e"},
 		Usage:   "edit memo",
 		Action:  cmdEdit,
+	},
+	{
+		Name:    "cat",
+		Aliases: []string{"v"},
+		Usage:   "view memo",
+		Action:  cmdCat,
 	},
 	{
 		Name:    "delete",
@@ -555,6 +561,50 @@ func cmdEdit(c *cli.Context) error {
 		}
 	}
 	return cfg.runcmd(cfg.Editor, "", files...)
+}
+
+func cmdCat(c *cli.Context) error {
+	var cfg config
+	err := cfg.load()
+	if err != nil {
+		return err
+	}
+
+	var files []string
+	f, err := os.Open(cfg.MemoDir)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	files, err = f.Readdirnames(-1)
+	if err != nil {
+		return err
+	}
+	f.Close()
+	files = filterMarkdown(files)
+	var buf bytes.Buffer
+	err = cfg.runfilter(cfg.SelectCmd, strings.NewReader(strings.Join(files, "\n")), &buf)
+	if err != nil {
+		// TODO:
+		// Some select tools return non-zero, and some return zero.
+		// This part can't handle whether the command execute failure or
+		// the select command exit non-zero.
+		//return fmt.Errorf("%v: you need to install peco first: https://github.com/peco/peco", err)
+		return err
+	}
+	if buf.Len() == 0 {
+		return errors.New("No files selected")
+	}
+	files = strings.Split(strings.TrimSpace(buf.String()), "\n")
+
+	f, err = os.Open(filepath.Join(cfg.MemoDir, files[0]))
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, err = io.Copy(os.Stdout, f)
+	return err
 }
 
 func cmdDelete(c *cli.Context) error {
