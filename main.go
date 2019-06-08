@@ -22,9 +22,9 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/fatih/color"
-	isatty "github.com/mattn/go-isatty"
-	runewidth "github.com/mattn/go-runewidth"
-	tty "github.com/mattn/go-tty"
+	"github.com/mattn/go-isatty"
+	"github.com/mattn/go-runewidth"
+	"github.com/mattn/go-tty"
 	"github.com/pkg/browser"
 	"github.com/shurcooL/github_flavored_markdown"
 	"github.com/shurcooL/github_flavored_markdown/gfmstyle"
