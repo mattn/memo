@@ -521,6 +521,38 @@ func filterTmpl(tmpl string) string {
 	})
 }
 
+func (cfg *config) filterFiles() ([]string, error) {
+	var files []string
+	f, err := os.Open(cfg.MemoDir)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	files, err = f.Readdirnames(-1)
+	if err != nil {
+		return nil, err
+	}
+	files = filterMarkdown(files)
+	var buf bytes.Buffer
+	err = cfg.runfilter(cfg.SelectCmd, strings.NewReader(strings.Join(files, "\n")), &buf)
+	if err != nil {
+		// TODO:
+		// Some select tools return non-zero, and some return zero.
+		// This part can't handle whether the command execute failure or
+		// the select command exit non-zero.
+		//return fmt.Errorf("%v: you need to install peco first: https://github.com/peco/peco", err)
+		return nil, err
+	}
+	if buf.Len() == 0 {
+		return nil, errors.New("No files selected")
+	}
+	files = strings.Split(strings.TrimSpace(buf.String()), "\n")
+	for i, file := range files {
+		files[i] = filepath.Join(cfg.MemoDir, file)
+	}
+	return files, nil
+}
+
 func cmdEdit(c *cli.Context) error {
 	var cfg config
 	err := cfg.load()
@@ -532,35 +564,26 @@ func cmdEdit(c *cli.Context) error {
 	if c.Args().Present() {
 		files = append(files, filepath.Join(cfg.MemoDir, c.Args().First()))
 	} else {
-		f, err := os.Open(cfg.MemoDir)
+		files, err = cfg.filterFiles()
 		if err != nil {
 			return err
-		}
-		defer f.Close()
-		files, err = f.Readdirnames(-1)
-		if err != nil {
-			return err
-		}
-		files = filterMarkdown(files)
-		var buf bytes.Buffer
-		err = cfg.runfilter(cfg.SelectCmd, strings.NewReader(strings.Join(files, "\n")), &buf)
-		if err != nil {
-			// TODO:
-			// Some select tools return non-zero, and some return zero.
-			// This part can't handle whether the command execute failure or
-			// the select command exit non-zero.
-			//return fmt.Errorf("%v: you need to install peco first: https://github.com/peco/peco", err)
-			return err
-		}
-		if buf.Len() == 0 {
-			return errors.New("No files selected")
-		}
-		files = strings.Split(strings.TrimSpace(buf.String()), "\n")
-		for i, file := range files {
-			files[i] = filepath.Join(cfg.MemoDir, file)
 		}
 	}
 	return cfg.runcmd(cfg.Editor, "", files...)
+}
+
+func catFile(file string) error {
+	f, err := os.Open(file)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		fmt.Println(scanner.Text())
+	}
+	return scanner.Err()
 }
 
 func cmdCat(c *cli.Context) error {
@@ -571,40 +594,26 @@ func cmdCat(c *cli.Context) error {
 	}
 
 	var files []string
-	f, err := os.Open(cfg.MemoDir)
-	if err != nil {
-		return err
+	if c.Args().Present() {
+		files = append(files, filepath.Join(cfg.MemoDir, c.Args().First()))
+	} else {
+		files, err = cfg.filterFiles()
+		if err != nil {
+			return err
+		}
 	}
-	defer f.Close()
-	files, err = f.Readdirnames(-1)
-	if err != nil {
-		return err
-	}
-	f.Close()
-	files = filterMarkdown(files)
-	var buf bytes.Buffer
-	err = cfg.runfilter(cfg.SelectCmd, strings.NewReader(strings.Join(files, "\n")), &buf)
-	if err != nil {
-		// TODO:
-		// Some select tools return non-zero, and some return zero.
-		// This part can't handle whether the command execute failure or
-		// the select command exit non-zero.
-		//return fmt.Errorf("%v: you need to install peco first: https://github.com/peco/peco", err)
-		return err
-	}
-	if buf.Len() == 0 {
-		return errors.New("No files selected")
-	}
-	files = strings.Split(strings.TrimSpace(buf.String()), "\n")
 
-	f, err = os.Open(filepath.Join(cfg.MemoDir, files[0]))
-	if err != nil {
-		return err
+	for i, file := range files {
+		if i > 0 {
+			// Print new page
+			fmt.Println("\x12")
+		}
+		err = catFile(file)
+		if err != nil {
+			return err
+		}
 	}
-	defer f.Close()
-
-	_, err = io.Copy(os.Stdout, f)
-	return err
+	return nil
 }
 
 func cmdDelete(c *cli.Context) error {
