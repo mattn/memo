@@ -448,6 +448,17 @@ func fileExists(filename string) bool {
 	return err == nil
 }
 
+func copyFromStdin(filename string) error {
+	f, err := os.OpenFile(filename, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	_, err = io.Copy(f, os.Stdin)
+	return err
+}
+
 func cmdNew(c *cli.Context) error {
 	var cfg config
 	err := cfg.load()
@@ -481,6 +492,9 @@ func cmdNew(c *cli.Context) error {
 	}
 	file = filepath.Join(cfg.MemoDir, file)
 	if fileExists(file) {
+		if !isatty.IsTerminal(os.Stdin.Fd()) {
+			return copyFromStdin(file)
+		}
 		return cfg.runcmd(cfg.Editor, "", file)
 	}
 
@@ -508,6 +522,10 @@ func cmdNew(c *cli.Context) error {
 	f.Close()
 	if err != nil {
 		return err
+	}
+
+	if !isatty.IsTerminal(os.Stdin.Fd()) {
+		return copyFromStdin(file)
 	}
 	return cfg.runcmd(cfg.Editor, "", file)
 }
