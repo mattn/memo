@@ -525,20 +525,8 @@ func cmdNew(c *cli.Context) error {
 	}
 
 	if !isatty.IsTerminal(os.Stdin.Fd()) {
-		f, err := os.OpenFile(file, os.O_APPEND|os.O_WRONLY, 0644)
-		if err != nil {
-			return err
-		}
-		defer f.Close()
-
-		_, err = io.Copy(f, os.Stdin)
-		return err
-	}
-
-	if !isatty.IsTerminal(os.Stdin.Fd()) {
 		return copyFromStdin(file)
 	}
-
 	return cfg.runcmd(cfg.Editor, "", file)
 }
 
