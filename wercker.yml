@@ -8,20 +8,12 @@ build:
           git version
           go version
     - script:
-        name: go get
-        code: |
-          go get -t ./...
-    - script:
         name: go test
         code: |
           go test -v ./...
 deploy:
   steps:
     - setup-go-workspace
-    - script:
-        name: go get
-        code: |
-          go get ./...
     - wercker/gox:
         os: darwin linux windows
         arch: 386 amd64
