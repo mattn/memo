@@ -3,7 +3,7 @@ module github.com/mattn/memo
 go 1.13
 
 require (
-	github.com/BurntSushi/toml v0.3.0
+	github.com/BurntSushi/toml v0.3.1
 	github.com/fatih/color v1.6.0
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-colorable v0.0.9 // indirect
