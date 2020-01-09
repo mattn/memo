@@ -24,7 +24,7 @@ require (
 	github.com/sourcegraph/annotate v0.0.0-20160123013949-f4cad6c6324d // indirect
 	github.com/sourcegraph/syntaxhighlight v0.0.0-20170531221838-bd320f5d308e // indirect
 	github.com/stretchr/testify v1.4.0 // indirect
-	github.com/urfave/cli v1.20.0
+	github.com/urfave/cli v1.22.2
 	golang.org/x/net v0.0.0-20180406214816-61147c48b25b // indirect
 	golang.org/x/sys v0.0.0-20180406135729-3b87a42e500a // indirect
 )
