@@ -14,7 +14,7 @@ require (
 	github.com/pkg/browser v0.0.0-20170505125900-c90ca0c84f15
 	github.com/russross/blackfriday v1.5.1 // indirect
 	github.com/sergi/go-diff v1.0.0 // indirect
-	github.com/shurcooL/github_flavored_markdown v0.0.0-20171120162553-28433ea3fc83
+	github.com/shurcooL/github_flavored_markdown 2122de532470
 	github.com/shurcooL/go v0.0.0-20180410215514-47fa5b7ceee6 // indirect
 	github.com/shurcooL/go-goon v0.0.0-20170922171312-37c2f522c041 // indirect
 	github.com/shurcooL/highlight_diff v0.0.0-20170515013008-09bb4053de1b // indirect
