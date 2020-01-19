@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/BurntSushi/toml v0.3.1
+	github.com/cpuguy83/go-md2man/v2 v2.0.0 // indirect
 	github.com/fatih/color v1.9.0
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-isatty v0.0.11
@@ -17,10 +18,10 @@ require (
 	github.com/shurcooL/go-goon v0.0.0-20170922171312-37c2f522c041 // indirect
 	github.com/shurcooL/highlight_diff v0.0.0-20170515013008-09bb4053de1b // indirect
 	github.com/shurcooL/highlight_go v0.0.0-20170515013102-78fb10f4a5f8 // indirect
-	github.com/shurcooL/octiconssvg v0.0.0-20180217052449-91d14858bf81 // indirect
+	github.com/shurcooL/octicon v0.0.0-20191102190552-cbb32d6a785c // indirect
 	github.com/sourcegraph/annotate v0.0.0-20160123013949-f4cad6c6324d // indirect
 	github.com/sourcegraph/syntaxhighlight v0.0.0-20170531221838-bd320f5d308e // indirect
 	github.com/stretchr/testify v1.4.0 // indirect
-	github.com/urfave/cli v1.22.2
+	github.com/urfave/cli/v2 v2.1.1
 	golang.org/x/net v0.0.0-20180406214816-61147c48b25b // indirect
 )
