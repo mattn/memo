@@ -1,0 +1,9 @@
+#!/bin/sh
+
+if [ "x$1" = "x-usage" ]; then
+  echo push memo from server
+  exit
+fi
+
+cd $MEMODIR && git pull origin master
+

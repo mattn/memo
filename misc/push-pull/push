@@ -1,0 +1,8 @@
+#!/bin/sh
+
+if [ "x$1" = "x-usage" ]; then
+  echo push memo to server
+  exit
+fi
+
+cd $MEMODIR && git add -A --ignore-errors && git commit -m update && git push origin master
