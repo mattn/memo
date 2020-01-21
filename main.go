@@ -913,6 +913,7 @@ func appRun(c *cli.Context) error {
 	// run external command as a memo subcommand.
 	xargs := args.Tail()
 	cmd := exec.Command(xcmdpath, xargs...)
+	cmd.Env = append(os.Environ(), fmt.Sprintf("MEMODIR=%s", cfg.MemoDir))
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
