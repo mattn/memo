@@ -2,8 +2,10 @@
 
 package main
 
-import "fmt"
+import (
+	"strings"
+)
 
 func shellquote(s string) string {
-	return fmt.Sprintf("%q", s)
+	return `'` + strings.Replace(s, `'`, `'\''`, -1) + `'`
 }
