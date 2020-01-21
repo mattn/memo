@@ -36,7 +36,7 @@ const (
 	width  = 80
 
 	// VERSION is a version of this app
-	VERSION = "0.0.4"
+	VERSION = "0.0.10"
 )
 
 const templateDirContent = `
