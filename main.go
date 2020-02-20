@@ -32,11 +32,14 @@ import (
 )
 
 const (
+	name     = "memo"
+	version  = "0.0.11"
+	revision = "HEAD"
+)
+
+const (
 	column = 30
 	width  = 80
-
-	// VERSION is a version of this app
-	VERSION = "0.0.10"
 )
 
 const templateDirContent = `
@@ -289,9 +292,9 @@ func ask(prompt string) (bool, error) {
 
 func run() int {
 	app := cli.NewApp()
-	app.Name = "memo"
+	app.Name = name
 	app.Usage = "Memo Life For You"
-	app.Version = VERSION
+	app.Version = version
 	app.Commands = commands
 	app.Action = appRun
 
