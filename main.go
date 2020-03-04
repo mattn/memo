@@ -22,6 +22,7 @@ import (
 
 	"github.com/BurntSushi/toml"
 	"github.com/fatih/color"
+	"github.com/mattn/go-colorable"
 	"github.com/mattn/go-isatty"
 	"github.com/mattn/go-runewidth"
 	"github.com/mattn/go-tty"
@@ -33,7 +34,7 @@ import (
 
 const (
 	name     = "memo"
-	version  = "0.0.12"
+	version  = "0.0.13"
 	revision = "HEAD"
 )
 
@@ -912,6 +913,8 @@ func appRun(c *cli.Context) error {
 	if err != nil {
 		return fmt.Errorf("'%s' is not a memo command. see 'memo help'", args.First())
 	}
+
+	defer colorable.EnableColorsStdout(nil)()
 
 	// run external command as a memo subcommand.
 	xargs := args.Tail()
