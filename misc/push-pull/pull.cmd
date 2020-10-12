@@ -4,4 +4,4 @@ echo pull memo from server
 goto :eof
 :run
 setlocal
-cd %MEMODIR% && git pull origin master
+cd %MEMODIR% && git pull origin master --rebase
