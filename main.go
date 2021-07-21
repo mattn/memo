@@ -34,7 +34,7 @@ import (
 
 const (
 	name     = "memo"
-	version  = "0.0.14"
+	version  = "0.0.15"
 	revision = "HEAD"
 )
 
@@ -717,7 +717,11 @@ func cmdGrep(c *cli.Context) error {
 	if runtime.GOOS == "windows" {
 		pos := 0
 		for {
-			err1 := cfg.runcmd(cfg.GrepCmd, c.Args().First(), args[pos:pos+20]...)
+			next := pos + 20
+			if next > len(args) {
+				next = len(args)
+			}
+			err1 := cfg.runcmd(cfg.GrepCmd, c.Args().First(), args[pos:next]...)
 			if err != nil {
 				err = err1
 			}
