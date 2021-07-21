@@ -714,6 +714,20 @@ func cmdGrep(c *cli.Context) error {
 	for _, file := range files {
 		args = append(args, filepath.Join(cfg.MemoDir, file))
 	}
+	if runtime.GOOS == "windows" {
+		pos := 0
+		for {
+			err1 := cfg.runcmd(cfg.GrepCmd, c.Args().First(), args[pos:pos+20]...)
+			if err != nil {
+				err = err1
+			}
+			pos += 20
+			if pos > len(args) {
+				break
+			}
+		}
+		return err
+	}
 	return cfg.runcmd(cfg.GrepCmd, c.Args().First(), args...)
 }
 
