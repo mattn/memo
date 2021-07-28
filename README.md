@@ -22,6 +22,7 @@ COMMANDS:
      edit, e    edit memo
      delete, d  delete memo
      grep, g    grep memo
+     cat, v     view memo
      config, c  configure
      serve, s   start http server
      help, h    Shows a list of commands or help for one command
