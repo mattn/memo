@@ -35,7 +35,7 @@ GLOBAL OPTIONS:
 ## Installation
 
 ```
-$ go get github.com/mattn/memo
+$ go install github.com/mattn/memo@latest
 ```
 
 Let's start create memo file.
