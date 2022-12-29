@@ -708,16 +708,18 @@ func cmdGrep(c *cli.Context) error {
 		return err
 	}
 	defer f.Close()
-	files, err := f.Readdirnames(-1)
-	if err != nil || len(files) == 0 {
-		return err
-	}
-	files = filterMarkdown(files)
 	var args []string
-	for _, file := range files {
-		args = append(args, filepath.Join(cfg.MemoDir, file))
+	if strings.Index(cfg.GrepCmd, "${FILES}") != -1 {
+		files, err := f.Readdirnames(-1)
+		if err != nil || len(files) == 0 {
+			return err
+		}
+		files = filterMarkdown(files)
+		for _, file := range files {
+			args = append(args, filepath.Join(cfg.MemoDir, file))
+		}
 	}
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == "windows" && len(args) > 0 {
 		pos := 0
 		for {
 			next := pos + 20
