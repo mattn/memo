@@ -24,5 +24,5 @@ require (
 	github.com/sourcegraph/syntaxhighlight v0.0.0-20170531221838-bd320f5d308e // indirect
 	github.com/urfave/cli/v2 v2.3.0
 	golang.org/x/net v0.0.0-20210716203947-853a461950ff // indirect
-	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
+	golang.org/x/sys v0.1.0 // indirect
 )
