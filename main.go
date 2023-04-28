@@ -648,25 +648,18 @@ func cmdDelete(c *cli.Context) error {
 		return err
 	}
 
-	if !c.Args().Present() {
-		return errors.New("pattern required")
+	var files []string
+	if c.Args().Present() {
+		files = append(files, filepath.Join(cfg.MemoDir, c.Args().First()))
+	} else {
+		files, err = cfg.filterFiles()
+		if err != nil {
+			return err
+		}
 	}
-	f, err := os.Open(cfg.MemoDir)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	files, err := f.Readdirnames(-1)
-	if err != nil {
-		return err
-	}
-	files = filterMarkdown(files)
-	pat := c.Args().First()
+
 	var args []string
 	for _, file := range files {
-		if pat != "" && !strings.Contains(file, pat) {
-			continue
-		}
 		fmt.Println(file)
 		args = append(args, filepath.Join(cfg.MemoDir, file))
 	}
