@@ -661,7 +661,7 @@ func cmdDelete(c *cli.Context) error {
 	var args []string
 	for _, file := range files {
 		fmt.Println(file)
-		args = append(args, filepath.Join(cfg.MemoDir, file))
+		args = append(args, file)
 	}
 	if len(args) == 0 {
 		color.Yellow("%s", "No matched entry")
