@@ -817,7 +817,7 @@ func cmdServe(c *cli.Context) error {
 			}
 		} else {
 			p := filepath.Join(cfg.MemoDir, escape(req.URL.Path))
-			b, err := ioutil.ReadFile(p)
+			b, err := os.ReadFile(p)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
