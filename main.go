@@ -727,7 +727,7 @@ func cmdGrep(c *cli.Context) error {
 				next = len(args)
 			}
 			err1 := cfg.runcmd(cfg.GrepCmd, c.Args().First(), args[pos:next]...)
-			if err != nil {
+			if err1 != nil {
 				err = err1
 			}
 			pos += 20
