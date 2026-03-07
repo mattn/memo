@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -306,7 +305,7 @@ func run() int {
 }
 
 func firstline(name string) string {
-	b, err := ioutil.ReadFile(name)
+	b, err := os.ReadFile(name)
 	if err != nil {
 		return ""
 	}
@@ -508,7 +507,7 @@ func cmdNew(c *cli.Context) error {
 	tmplString := templateMemoContent
 
 	if fileExists(cfg.MemoTemplate) {
-		b, err := ioutil.ReadFile(cfg.MemoTemplate)
+		b, err := os.ReadFile(cfg.MemoTemplate)
 		if err != nil {
 			return err
 		}
