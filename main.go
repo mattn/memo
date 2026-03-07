@@ -541,7 +541,8 @@ var filterReg = regexp.MustCompile(`{{_(.+?)_}}`)
 func filterTmpl(tmpl string) string {
 	return filterReg.ReplaceAllStringFunc(tmpl, func(substr string) string {
 		m := filterReg.FindStringSubmatch(substr)
-		return fmt.Sprintf("{{.%s}}", strings.Title(m[1]))
+		s := m[1]
+		return fmt.Sprintf("{{.%s}}", strings.ToUpper(s[:1])+s[1:])
 	})
 }
 
