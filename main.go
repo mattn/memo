@@ -33,7 +33,7 @@ import (
 
 const (
 	name     = "memo"
-	version  = "0.0.18"
+	version  = "0.0.19"
 	revision = "HEAD"
 )
 
