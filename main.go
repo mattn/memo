@@ -709,7 +709,7 @@ func cmdGrep(c *cli.Context) error {
 	}
 	defer f.Close()
 	var args []string
-	if strings.Index(cfg.GrepCmd, "${FILES}") != -1 {
+	if strings.Contains(cfg.GrepCmd, "${FILES}") {
 		files, err := f.Readdirnames(-1)
 		if err != nil || len(files) == 0 {
 			return err
