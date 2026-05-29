@@ -401,12 +401,7 @@ func (cfg *config) runfilter(command string, r io.Reader, w io.Writer) error {
 		return os.Getenv(s)
 	})
 
-	var cmd *exec.Cmd
-	if runtime.GOOS == "windows" {
-		cmd = exec.Command("cmd", "/c", command)
-	} else {
-		cmd = exec.Command("sh", "-c", command)
-	}
+	cmd := shellCommand(command)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = w
 	cmd.Stdin = r
@@ -437,12 +432,7 @@ func (cfg *config) runcmd(command, pattern string, files ...string) error {
 		command += " " + cmdargs
 	}
 
-	var cmd *exec.Cmd
-	if runtime.GOOS == "windows" {
-		cmd = exec.Command("cmd", "/c", command)
-	} else {
-		cmd = exec.Command("sh", "-c", command)
-	}
+	cmd := shellCommand(command)
 	cmd.Stderr = os.Stderr
 	cmd.Stdout = os.Stdout
 	cmd.Stdin = os.Stdin
