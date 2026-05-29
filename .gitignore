@@ -1,4 +1,5 @@
 dist
 memo
+*.exe
 .envrc
 .claude
