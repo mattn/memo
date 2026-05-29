@@ -24,7 +24,7 @@ import (
 	"github.com/mattn/go-colorable"
 	"github.com/mattn/go-isatty"
 	"github.com/mattn/go-runewidth"
-	"github.com/mattn/go-tty"
+	"github.com/mattn/go-tty/v2"
 	"github.com/pkg/browser"
 	"github.com/shurcooL/github_flavored_markdown"
 	"github.com/shurcooL/github_flavored_markdown/gfmstyle"
@@ -284,7 +284,7 @@ func ask(prompt string) (bool, error) {
 	defer t.Close()
 	var r rune
 	for r == 0 {
-		r, err = t.ReadRune()
+		r, _, err = t.ReadRune()
 		if err != nil {
 			return false, err
 		}
